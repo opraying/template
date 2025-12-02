@@ -1,0 +1,159 @@
+---
+description: effect package
+globs: **/client/**/*.ts
+alwaysApply: false
+---
+
+# Effect-Rx Usage Guide
+
+Effect-Rx is a powerful state management library that combines Effect.io with reactive programming principles. This guide explains how to use Effect-Rx effectively in your React applications.
+
+## Core Concepts
+
+- Service Organization
+   - Keep services focused and single-responsibility
+   - Use dependencies array for service composition
+   - Implement `useRx` for React integration
+   - Use proper type safety with generics
+
+- State Management
+   - Use appropriate hooks for different scenarios:
+     - `useSuspenseSuccess` for guaranteed success states
+     - `useSuspense` for handling all states
+     - `useRxValue` for simple subscriptions
+     - `useRxSubscribe` for side effects
+   - Implement proper cleanup in effects
+   - Handle loading and error states appropriately
+
+- Performance Optimization
+   - Use `lazyRxService` for lazy initialization
+   - Implement proper memoization
+   - Consider using `useRxMount` for lifecycle management
+   - Use selective subscriptions to minimize rerenders
+
+- Error Handling
+   - Use `Exit.mapError` for transforming errors
+   - Implement proper error boundaries with Suspense
+   - Handle edge cases with Option type
+   - Provide meaningful error messages
+
+## Service Pattern
+
+```typescript
+export class TodoService extends Effect.Service<TodoService>()("@client/todo/todo-service", {
+  accessors: true,
+  effect: Effect.gen(function* () {
+    const todoRepository = yield* TodoRepository
+    
+    return {
+      createTodo,
+      updateTodo,
+      removeTodo,
+      // ... other methods
+    }
+  }),
+  dependencies: [TodoRepository.Default],
+}) {
+  static get useRx() {
+    return lazyRxService(this, useTodoService)
+  }
+}
+```
+
+## Hook Creation Pattern
+
+```typescript
+const useTodoService = UseUseServices(
+  { TodoService },
+  Live
+)(({ runtime, services: { TodoService } }) => {
+  const filter = Rx.make<FilterType>("all")
+
+  const filteredTodos = runtime.rx((ctx) =>
+    Effect.gen(function* () {
+      const filterType = ctx.get(filter)
+      const stream = yield* TodoService.getFilteredTodosStream(filterType)
+      return stream
+    }).pipe(Stream.unwrap)
+  )
+
+  return {
+    filter,
+    filteredTodos,
+    // ... other methods
+  }
+})
+```
+
+## Using Reactive Values in Components
+
+```typescript
+function TodoScreen() {
+  const todoService = TodoService.useRx
+  const [filter, setFilter] = todoService.filter.use()
+  const { value: filteredTodos } = todoService.filteredTodos.useSuspenseSuccess()
+  const { value: allTodos } = todoService.allTodos.useSuspenseSuccess()
+
+  // Component logic
+}
+```
+
+## State Management Hooks
+
+```typescript
+const value = useRxValue(rx)
+
+const transformed = useRxValue(rx, transform)
+
+const result = useRxSuspense(rx, { suspendOnWaiting: true })
+
+const success = useRxSuspenseSuccess(rx)
+
+const [value, setValue] = useRx(writableRx)
+
+useRxSubscribe(rx, callback, { immediate: true })
+```
+
+## Handling Async Operations
+
+```typescript
+const handleOperation = () => 
+  service.method.promise(params).then(
+    Exit.mapError((error) => handleError(error))
+  )
+
+const { value } = service.state.useSuspenseSuccess({
+  suspendOnWaiting: true
+})
+```
+
+## Reactive Service with Streams
+
+```typescript
+const getFilteredTodosStream = (filter: FilterType) => 
+  reactivity.stream({ todos: [] }, getFilteredTodos(filter))
+
+const allTodosStream = reactivity.stream({ todos: [] }, allTodos())
+```
+
+## Complex State Updates
+
+```typescript
+const handleToggleAll = () => {
+  const nextCompleted = !allCompleted
+  allTodos.forEach((todo) => {
+    todoService.toggleTodo({ id: todo.id, completed: nextCompleted })
+  })
+}
+```
+
+## Ref Bindings
+
+```typescript
+const binding = useRxRefBinding(ref, key, transform, reverseTransform)
+
+const { value, setValue } = useRxRefBindingIdentity(ref, key)
+
+const { value, setValue, toggle } = useRxBindingBoolean(rx)
+```
+

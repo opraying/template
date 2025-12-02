@@ -1,0 +1,24 @@
+diff --git a/dist/index.esm.js b/dist/index.esm.js
+index 82ff6ec6e65db5775f4cd2693bcd8bacb44ef2c5..3da45bc5ae64a4b06391edc486929542c4ac1a6c 100644
+--- a/dist/index.esm.js
++++ b/dist/index.esm.js
+@@ -408,6 +408,7 @@ function findScript(cdnUrl) {
+ function injectScript(src) {
+   var script = document.createElement('script');
+   script.src = src;
++  script.crossOrigin = 'anonymous';
+   var headOrBody = document.head || document.body;
+   if (!headOrBody) {
+     throw new Error('Cannot inject Paddle.js. It needs a <head> or <body> element.');
+diff --git a/dist/index.js b/dist/index.js
+index d05c39fd51bbee440c55cf37e7bdcfaacbc83581..31637aa299597779b134f1292132552ce4529f8d 100644
+--- a/dist/index.js
++++ b/dist/index.js
+@@ -414,6 +414,7 @@
+   function injectScript(src) {
+     var script = document.createElement('script');
+     script.src = src;
++    script.crossOrigin = 'anonymous';
+     var headOrBody = document.head || document.body;
+     if (!headOrBody) {
+       throw new Error('Cannot inject Paddle.js. It needs a <head> or <body> element.');

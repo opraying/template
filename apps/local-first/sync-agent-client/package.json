@@ -1,0 +1,7 @@
+{
+  "name": "template-sync-agent-client",
+  "type": "module",
+  "version": "0.0.0",
+  "private": true,
+  "sideEffects": []
+}

@@ -1,0 +1,29 @@
+{
+  "name": "pkgs-app",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/app/src",
+  "projectType": "library",
+  "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/node_modules/.vitest/packages/app", "{workspaceRoot}/coverage/packages/app"],
+      "options": {
+        "command": "pnpm xdev test --project pkgs-app"
+      }
+    },
+    "madge": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "madge --ts-config ./tsconfig.lib.json --circular --no-color --no-spinner --extensions ts,tsx ./src",
+        "cwd": "packages/app"
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsgo -p packages/app/tsconfig.check.json"
+      }
+    }
+  },
+  "tags": []
+}

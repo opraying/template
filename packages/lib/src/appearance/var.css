@@ -1,0 +1,264 @@
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeOutDown {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  to {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+}
+
+.loading-root {
+  display: none;
+  width: 100%;
+  opacity: 0;
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  z-index: 999;
+  background: hsl(var(--background));
+  transition: opacity 0.3s var(--transition-timing-function);
+}
+
+.loading-container {
+  width: 90%;
+  height: 270px;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.loading-container > img {
+  width: 200px;
+  height: 60px;
+}
+
+.loading-retry {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  opacity: 0;
+  transform: translateY(20px);
+  pointer-events: none;
+  transform: translateY(20px) scale(0.95);
+  transition:
+    opacity 0.3s var(--transition-timing-function),
+    transform 0.3s var(--transition-timing-function);
+}
+
+.loading-retry > p {
+  color: hsl(var(--primary));
+  font-size: 14px;
+  line-height: 19px;
+  margin-bottom: 10px;
+}
+
+.loading-retry-button {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 10px auto 0 auto;
+  width: 120px;
+  height: 35px;
+  border-radius: 6px;
+  border: none;
+  background-color: hsl(var(--accent));
+  color: hsl(var(--primary-foreground));
+  font-size: 16px;
+  font-weight: 500;
+  cursor: default;
+}
+
+.loading-retry-button:hover,
+.loading-retry-button:focus {
+  background-color: hsl(var(--accent) / 0.8);
+}
+
+.loader {
+  width: 160px;
+  margin: 0 auto;
+  padding: 0px;
+  border-radius: 13px;
+  position: relative;
+  height: 6px;
+}
+
+.loader:before {
+  content: '';
+  background-color: hsl(var(--muted));
+  border-radius: 13px;
+  position: absolute;
+  top: 0px;
+  bottom: 0px;
+  right: 0px;
+  left: 0px;
+}
+
+.loader .loaderBar {
+  position: absolute;
+  border-radius: 13px;
+  top: 0;
+  right: 100%;
+  bottom: 0;
+  left: 0;
+  background: hsl(var(--primary));
+  width: 0;
+  animation: borealisBar 1.6s var(--transition-timing-function) infinite;
+}
+
+@keyframes borealisBar {
+  0% {
+    left: 0%;
+    right: 100%;
+    width: 0%;
+  }
+
+  10% {
+    left: 0%;
+    right: 75%;
+    width: 25%;
+  }
+
+  90% {
+    right: 0%;
+    left: 75%;
+    width: 25%;
+  }
+
+  100% {
+    left: 100%;
+    right: 0%;
+    width: 0%;
+  }
+}
+
+@keyframes loader2Enter {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.93);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.loader2 {
+  width: 48px;
+  height: 40px;
+  margin-top: 30px;
+  display: inline-block;
+  position: relative;
+  background: hsl(var(--primary));
+  border-radius: 15% 15% 35% 35%;
+  opacity: 0;
+  transform: translateY(10px) scale(0.93);
+  animation: loader2Enter 0.4s var(--transition-timing-function) forwards;
+}
+
+.loading-root[style*='opacity: 0'] .loader2 {
+  animation: loader2Exit 0.7s var(--transition-timing-function) forwards;
+}
+
+@keyframes loader2Exit {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+
+  to {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.93);
+  }
+}
+
+.loader2::after {
+  content: '';
+  box-sizing: border-box;
+  position: absolute;
+  left: 45px;
+  top: 8px;
+  border: 4px solid hsl(var(--primary));
+  width: 16px;
+  height: 20px;
+  border-radius: 0 4px 4px 0;
+}
+
+.loader2::before {
+  content: '';
+  position: absolute;
+  width: 1px;
+  height: 10px;
+  color: hsl(var(--primary));
+  top: -15px;
+  left: 11px;
+  box-sizing: border-box;
+  animation: animloader 1s var(--transition-timing-function) infinite;
+}
+
+@keyframes animloader {
+  0% {
+    box-shadow:
+      2px 0px rgba(255, 255, 255, 0),
+      12px 0px rgba(255, 255, 255, 0.3),
+      20px 0px rgba(255, 255, 255, 0);
+  }
+
+  50% {
+    box-shadow:
+      2px -5px rgba(255, 255, 255, 0.5),
+      12px -3px rgba(255, 255, 255, 0.5),
+      20px -2px rgba(255, 255, 255, 0.6);
+  }
+
+  100% {
+    box-shadow:
+      2px -8px rgba(255, 255, 255, 0),
+      12px -5px rgba(255, 255, 255, 0),
+      20px -5px rgba(255, 255, 255, 0);
+  }
+}

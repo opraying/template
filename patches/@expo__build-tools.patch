@@ -1,0 +1,32 @@
+diff --git a/dist/common/setup.js b/dist/common/setup.js
+index c356a72931a29cad6dbb34daf27b9a02176e6300..3e3be5b72a4fe0a711aed2e3d473b16e6b18f551 100644
+--- a/dist/common/setup.js
++++ b/dist/common/setup.js
+@@ -32,9 +32,11 @@ async function setupAsync(ctx) {
+     var _a;
+     await ctx.runBuildPhase(eas_build_job_1.BuildPhase.PREPARE_PROJECT, async () => {
+         await (0, retry_1.retryAsync)(async () => {
+-            await fs_extra_1.default.rm(ctx.buildDirectory, { recursive: true, force: true });
+-            await fs_extra_1.default.mkdir(ctx.buildDirectory, { recursive: true });
+-            await (0, projectSources_1.prepareProjectSourcesAsync)(ctx, ctx.buildDirectory);
++            if (!process.env.EXPO_FIXED_BUILD_WORKDIR) {
++                await fs_extra_1.default.rm(ctx.buildDirectory, { recursive: true, force: true });
++                await fs_extra_1.default.mkdir(ctx.buildDirectory, { recursive: true });
++                await (0, projectSources_1.prepareProjectSourcesAsync)(ctx, ctx.buildDirectory);
++            }
+         }, {
+             retryOptions: {
+                 retries: 3,
+diff --git a/dist/context.js b/dist/context.js
+index d0e718f04dc9f7b4154454e46f5fc7fba80ab794..e5d7d1358c614cc482d9aa365d61aa277ce1d278 100644
+--- a/dist/context.js
++++ b/dist/context.js
+@@ -65,7 +65,7 @@ class BuildContext {
+         return this._env;
+     }
+     get buildDirectory() {
+-        return path_1.default.join(this.workingdir, 'build');
++        return process.env.EXPO_FIXED_BUILD_WORKDIR ?? path_1.default.join(this.workingdir, 'build');
+     }
+     get buildLogsDirectory() {
+         return path_1.default.join(this.workingdir, 'logs');

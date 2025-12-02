@@ -1,0 +1,29 @@
+{
+  "name": "pkgs-toaster",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/toaster/src",
+  "projectType": "library",
+  "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/node_modules/.vitest/packages/toaster", "{workspaceRoot}/coverage/packages/toaster"],
+      "options": {
+        "command": "pnpm xdev test --project pkgs-toaster"
+      }
+    },
+    "madge": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "madge --ts-config ./tsconfig.lib.json --circular --no-color --no-spinner --extensions ts,tsx ./src",
+        "cwd": "packages/toaster"
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsgo -p packages/toaster/tsconfig.check.json"
+      }
+    }
+  },
+  "tags": []
+}

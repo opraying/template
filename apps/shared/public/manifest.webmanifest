@@ -1,0 +1,42 @@
+{
+  "id": "template",
+  "name": "Template Web",
+  "short_name": "Template Web",
+  "description": "Template Web",
+  "scope": ".",
+  "display": "standalone",
+  "start_url": "/",
+  "theme_color": "#DCF521",
+  "background_color": "#000000",
+  "lang": "en",
+  "dir": "ltr",
+  "orientation": "any",
+  "launch_handler": {
+    "client_mode": "focus-existing"
+  },
+  "icons": [
+    {
+      "src": "/pwa-64x64.png",
+      "sizes": "64x64",
+      "type": "image/png"
+    },
+    {
+      "src": "/pwa-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/pwa-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/maskable-icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "categories": ["productivity"]
+}

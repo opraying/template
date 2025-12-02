@@ -1,0 +1,15 @@
+diff --git a/dist/client/client.mjs b/dist/client/client.mjs
+index 146aede4a0d4fb3a362bc86ded74d9f13196a46a..900e6348fac6bcf451ccc665170b6c851e42cea5 100644
+--- a/dist/client/client.mjs
++++ b/dist/client/client.mjs
+@@ -819,7 +819,9 @@ const hmrClient = new HMRClient({
+ 	});
+ 	return await importPromise;
+ });
+-transport.connect(createHMRHandler(handleMessage));
++if (typeof window !== "undefined") {
++	transport.connect(createHMRHandler(handleMessage));
++}
+ async function handleMessage(payload) {
+ 	switch (payload.type) {
+ 		case "connected":

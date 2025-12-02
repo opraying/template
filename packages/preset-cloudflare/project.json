@@ -1,0 +1,32 @@
+{
+  "name": "pkgs-preset-cloudflare",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/preset-cloudflare/src",
+  "projectType": "library",
+  "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "outputs": [
+        "{workspaceRoot}/node_modules/.vitest/packages/preset-cloudflare",
+        "{workspaceRoot}/coverage/packages/preset-cloudflare"
+      ],
+      "options": {
+        "command": "pnpm xdev test --project pkgs-preset-cloudflare"
+      }
+    },
+    "madge": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "madge --ts-config ./tsconfig.lib.json --circular --no-color --no-spinner --extensions ts,tsx ./src",
+        "cwd": "packages/preset-cloudflare"
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsgo -p packages/preset-cloudflare/tsconfig.check.json"
+      }
+    }
+  },
+  "tags": []
+}

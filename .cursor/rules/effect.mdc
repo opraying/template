@@ -1,0 +1,813 @@
+---
+description: effect package
+globs: packages/event-log/src, packages/presets/src, packages/fx/src, **/client/**/*.ts
+---
+
+# Effect Development Guidelines
+
+You are an expert in Effect, a powerful TypeScript library for building scalable, maintainable, and type-safe applications.
+
+Key Principles
+- Write type-safe, composable Effect programs using functional programming patterns
+- Use declarative and functional programming - avoid classes and imperative code
+- Prefer iteration and modularization over code duplication
+- Use descriptive variable names with auxiliary verbs (e.g., isLoading, hasError)
+- Follow RORO (Receive an Object, Return an Object) pattern for complex functions
+- Write concise, technical code with accurate TypeScript examples
+
+TypeScript and Code Style
+- Use TypeScript for all code; prefer interfaces over types
+- Use "function" keyword for pure functions
+- Avoid unnecessary curly braces in conditional statements
+- Use early returns and guard clauses for better readability
+- Place static content and interfaces at file end
+- Use lowercase with dashes for directories (e.g., effects/auth-flow)
+
+Core Concepts and Examples
+- Effect Type: Effect<A, E, R> where:
+  - A: Success type (output)
+  - E: Error type (failures)
+  - R: Required context/dependencies (environment)
+
+Effect Usage
+- Prefer Effect over direct Promise usage
+- Use Effect.gen for complex workflows
+- Use pipe operator for Effect composition
+- Handle errors explicitly using Effect error handling
+- Use Context/Layer for dependency injection
+- Implement proper resource cleanup with Scope
+
+Error Handling Best Practices
+- Handle errors and edge cases at the beginning of functions
+- Use early returns for error conditions to avoid nesting
+- Place the happy path last in the function
+- Use tagged errors for type-safe error handling
+- Handle expected errors with catchTag
+- Use catchAll for unexpected errors
+- Implement proper error recovery strategies
+- Use Effect.gen for complex error flows
+- Implement proper error logging and user-friendly error messages
+- Consider using custom error types or error factories
+
+Common Functions
+Essential functions to know:
+- Creation: Effect.succeed, Effect.fail, Effect.sync
+- Promise Integration: Effect.promise, Effect.tryPromise
+- Control Flow: Effect.gen
+- Error Handling: Effect.catchTag, Effect.catchAll
+- Resources: Effect.acquireRelease, Effect.acquireUseRelease
+- Dependencies: Effect.provide, Effect.provideService
+- Pipeline: Effect.andThen, Effect.map, Effect.tap
+
+Resource Management
+- Always use acquireRelease for cleanup
+- Leverage Scope for resource lifecycle
+- Implement proper cleanup in release handlers
+- Use Layer for complex resource dependencies
+
+Dependency Injection
+- Use Context for service definitions
+- Implement services using Layer
+- Follow Tag-based dependency injection
+- Use provideService for simple dependencies
+- Use Layer composition for complex deps
+
+Effect Data Types
+Common data types to use:
+- Option: for optional values
+- Either: for branching logic
+- Array: for collection operations
+- Match: for pattern matching
+- Schema: for validation
+
+Testing
+- Use TestContext for mocking
+- Implement proper test layers
+- Use Effect.gen in tests
+- Test error cases explicitly
+- Mock external dependencies
+- Test happy paths and error paths separately
+
+Performance Optimization
+- Use Effect caching when appropriate
+- Implement proper concurrency control
+- Use batching for multiple operations
+- Optimize resource usage
+- Implement proper cleanup
+- Use dynamic loading for non-critical operations
+
+React Integration
+- Use Effect hooks properly with React components
+- Implement proper cleanup in useEffect equivalents
+- Handle component lifecycle correctly
+- Use Effect for async operations in components
+- Wrap Effect-based components in Suspense with fallback
+- Use Effect.gen for complex component logic
+- Implement proper error boundaries
+- Use Schema for form validation
+- Services should throw user-friendly errors that can be caught by query clients
+
+API Integration
+- Use Effect for HTTP calls
+- Implement proper error handling
+- Use Layer for API dependencies
+- Handle request/response properly
+- Implement proper retry strategies
+- Use proper logging and monitoring
+
+API Design and Implementation
+
+API Service Layer:
+- Define API services using Effect.Tag for dependency injection
+- Implement service interfaces with clear input/output types
+- Use Schema for request/response validation
+- Group related API endpoints into service modules
+- Use proper TypeScript types for all API operations
+
+Error Handling:
+- Define custom error types for different API errors
+- Use tagged errors for type-safe error handling
+- Implement proper error recovery strategies
+- Handle network errors gracefully
+- Provide user-friendly error messages
+- Log errors with proper context for debugging
+
+HTTP Client Layer:
+- Create a type-safe HTTP client using Effect
+- Use Effect.promise to wrap fetch or axios
+- Implement proper request interceptors
+- Handle response transformations
+- Set proper timeout and retry configurations
+- Handle authentication and authorization
+
+Request/Response Handling:
+- Use Schema for request/response validation
+- Implement proper request serialization
+- Handle response deserialization
+- Validate response data structure
+- Transform response to domain models
+- Handle pagination and filtering
+
+Caching and Performance:
+- Implement proper caching strategies
+- Use Effect caching for expensive operations
+- Handle cache invalidation properly
+- Implement proper request deduplication
+- Use batching for multiple requests
+- Optimize payload size and format
+
+Security:
+- Implement proper authentication
+- Handle authorization properly
+- Secure sensitive data in transit
+- Validate input data thoroughly
+- Implement rate limiting
+- Handle CORS properly
+
+Monitoring and Logging:
+- Use Effect.withSpan for tracing
+- Implement proper logging levels
+- Log request/response details
+- Monitor API performance
+- Track error rates and types
+- Implement health checks
+
+Testing:
+- Write unit tests for API services
+- Mock HTTP responses properly
+- Test error scenarios
+- Validate request/response schemas
+- Test retry and timeout logic
+- Test authentication flows
+
+Best Practices:
+- Follow RESTful conventions
+- Use proper HTTP methods
+- Implement proper versioning
+- Handle concurrent requests
+- Implement proper cleanup
+- Document API endpoints
+- Use proper status codes
+- Handle backward compatibility
+
+File Structure
+- Organize by feature/module
+- Separate service definitions
+- Group related Effects
+- Keep Layer definitions separate
+- Maintain clear dependency boundaries
+- Follow consistent naming conventions:
+  - services/: Service definitions/implementations
+  - context/: Layer/Context compositions
+  - models/: Data models and types
+  - utils/: Utility functions
+  
+Common Modules to Import
+- Effect: core functionality
+- Context: service definitions
+- Layer: dependency composition
+- Option: optional values
+- Either: branching logic
+- Array : array data types
+- Chunk: chunk data types
+- Stream: stream operations
+- Match: pattern matching
+- Ref: atomic state management
+- Schedule: scheduling
+- Queue: producer-consumer patterns
+- Console: logging and monitoring
+- Scope: resource management
+- Cause: error handling
+- Data: data structures
+- Datetime: date and time operations
+- Deferred: deferred computations
+- Differ: change detection
+- Exit: program termination
+- Duration: time durations
+- Schema: validation
+
+Remember these additional module-specific principles:
+1. Use Stream for processing sequences of data
+2. Leverage Queue for producer-consumer patterns
+3. Use Ref for atomic state management
+4. Apply Schedule for retry and interval patterns
+5. Compose Layer for complex service dependencies
+6. Handle backpressure in streams and queues
+7. Use appropriate queue strategies (bounded, sliding, dropping)
+8. Implement proper cleanup for resources
+9. Use concurrent processing when appropriate
+10. Monitor and log operations effectively
+
+
+Platform Integration
+
+- Core Platform Concepts:
+  - HttpApp: Effect-based HTTP request handlers
+  - Server: Execution layer for Default apps
+  - Router: Request routing with RouteNotFound error
+  - Handler: Request processors with RouteContext access
+  - Middleware: Transform Default apps for enhanced functionality
+
+- Platform Selection:
+  - @effect/platform-node: Node.js specific implementations
+  - @effect/platform-bun: Bun runtime implementations
+  - @effect/platform-browser: Browser specific implementations
+  - Choose based on target environment
+
+- HTTP Server Implementation:
+  - Create type-safe handlers for specific routes
+  - Organize routes using Router for clean structure
+  - Apply middleware for cross-cutting concerns
+  - Use proper error handling and status codes
+  - Implement proper request validation
+  - Handle response serialization correctly
+
+- HTTP Client Implementation:
+  - Use HttpClient.HttpClient tag for service access
+  - Leverage built-in methods (get, post, put, etc.)
+  - Create custom requests with HttpClientRequest
+  - Transform requests using mapRequest/mapRequestEffect
+  - Handle responses with proper error handling
+  - Use Schema for response validation
+
+- Request/Response Pipeline:
+  - Validate incoming requests with Schema
+  - Transform request/response data appropriately
+  - Handle errors with proper status codes
+  - Implement proper logging and monitoring
+  - Use proper content types and headers
+  - Handle authentication and authorization
+
+- Platform Best Practices:
+  - Use platform-specific optimizations
+  - Implement proper resource cleanup
+  - Handle platform-specific errors
+  - Use appropriate middleware stack
+  - Implement proper security measures
+  - Monitor platform-specific metrics
+
+- Example Patterns:
+  ```typescript
+  // HTTP Client Usage
+  const program = Effect.gen(function* () {
+    const client = yield* HttpClient.HttpClient
+    const response = yield* client.get("https://api.example.com/data")
+    return yield* HttpClientResponse.schemaBodyJson(MySchema)(response)
+  }).pipe(
+    Effect.scoped,
+    Effect.provide(FetchHttpClient.layer)
+  )
+
+  // HTTP Server Route
+  const handler = Effect.gen(function* () {
+    const request = yield* ServerRequest.ServerRequest
+    const data = yield* request.json
+    return yield* Response.json(data)
+  })
+
+  const router = Router.make()
+    .get("/api/data", handler)
+    .pipe(Router.use(authMiddleware))
+  ```
+
+- Testing Platform Code:
+  - Mock HTTP requests and responses
+  - Test different platform scenarios
+  - Validate platform-specific behavior
+  - Test error handling and recovery
+  - Verify resource cleanup
+  - Test platform integration points
+
+SQL Integration
+
+- Database Providers:
+  - @effect/sql-sqlite: Various SQLite implementations
+  - @effect/sql-drizzle: Drizzle ORM integration
+  - @effect/sql-kysely: Kysely query builder integration
+
+- SQL Client Setup:
+  - Use appropriate SQL client layer for your database
+  - Configure database connection parameters
+  - Handle connection lifecycle properly
+  - Implement proper error handling
+  - Use connection pooling when appropriate
+  - Example:
+    ```typescript
+    const SqlLive = PgClient.layer({
+      database: "my_database"
+    })
+    // Or with config
+    const SqlLive = PgClient.layerConfig({
+      database: Config.string("DATABASE")
+    })
+    ```
+
+- Query Building:
+  - Use template literals for type-safe queries
+  - Leverage safe interpolation for parameters
+  - Use SQL helpers for common operations
+  - Handle identifiers properly
+  - Implement proper WHERE clause combinators
+  - Example:
+    ```typescript
+    const query = sql`
+      SELECT * FROM ${sql("users")}
+      WHERE ${sql.and([
+        sql`name = ${name}`,
+        sql`age > ${age}`
+      ])}
+      LIMIT ${limit}
+    `
+    ```
+
+- SQL Resolvers:
+  - Use SqlResolver for type-safe database operations
+  - Implement proper request/response schemas
+  - Handle batch operations efficiently
+  - Use proper caching strategies
+  - Example:
+    ```typescript
+    const GetUserById = yield* SqlResolver.findById("GetUserById", {
+      Id: Schema.Number,
+      Result: UserSchema,
+      ResultId: (_) => _.id,
+      execute: (ids) => sql`
+        SELECT * FROM users 
+        WHERE ${sql.in("id", ids)}
+      `
+    })
+    ```
+
+- SQL Schemas:
+  - Define clear data models using Schema
+  - Implement proper validation
+  - Handle data transformations
+  - Use proper type mappings
+  - Example:
+    ```typescript
+    class User extends Schema.Class<User>("User")({
+      id: Schema.Number,
+      name: Schema.String,
+      createdAt: Schema.DateFromSelf
+    }) {}
+    ```
+
+- Database Operations:
+  - Implement CRUD operations type-safely
+  - Handle transactions properly
+  - Implement proper error handling
+  - Use batch operations when appropriate
+  - Handle migrations properly
+  - Example:
+    ```typescript
+    const insertUser = SqlResolver.ordered("InsertUser", {
+      Request: InsertUserSchema,
+      Result: User,
+      execute: (requests) => sql`
+        INSERT INTO users ${sql.insert(requests)}
+        RETURNING *
+      `
+    })
+    ```
+
+- Performance Optimization:
+  - Use proper indexing strategies
+  - Implement query optimization
+  - Use connection pooling
+  - Handle batch operations
+  - Implement proper caching
+  - Monitor query performance
+
+- Error Handling:
+  - Handle database-specific errors
+  - Implement proper error recovery
+  - Use typed error handling
+  - Provide clear error messages
+  - Log database errors properly
+  - Implement proper retries
+
+- Testing:
+  - Mock database operations
+  - Test SQL queries
+  - Validate data schemas
+  - Test error scenarios
+  - Use test databases
+  - Test migrations
+
+- Best Practices:
+  - Follow SQL best practices
+  - Use proper migrations
+  - Implement proper security
+  - Handle connections properly
+  - Use proper logging
+  - Monitor database performance
+  - Document database schema
+  - Handle versioning properly
+
+## Commonly Used Functions
+
+Essential Effect functions to master:
+
+1. Creating Effects:
+   ```typescript
+   // Basic creation
+   Effect.succeed(value)
+   Effect.fail(error)
+   Effect.sync(() => computation)
+   
+   // Promise integration
+   Effect.promise(() => promise)
+   Effect.tryPromise(() => promise)
+   ```
+
+2. Control Flow:
+   ```typescript
+   // Using Effect.gen for complex workflows
+   const program = Effect.gen(function* () {
+     const a = yield* effectA
+     const b = yield* effectB
+     return combine(a, b)
+   })
+   ```
+
+3. Error Handling:
+   ```typescript
+   effect.pipe(
+     Effect.catchTag("ErrorTag", (error) => recovery),
+     Effect.catchAll((error) => fallback)
+   )
+   ```
+
+4. Resource Management:
+   ```typescript
+   Effect.acquireRelease(
+     acquire,
+     (resource) => cleanup
+   )
+   ```
+
+5. Dependency Injection:
+   ```typescript
+   Effect.provideService(Service, implementation)
+   ```
+
+## Advanced Effect Patterns
+
+### Effect Runtime Configuration
+
+```typescript
+// Configure runtime options
+const runtime = Effect.runtime.make().pipe(
+  Effect.provide(Layer.succeed(ConfigProvider, config)),
+  Effect.provide(Logger.layer),
+  Effect.runSync
+)
+
+// Run effects with custom runtime
+const program = Effect.succeed("Hello")
+runtime.pipe(Effect.runSync(program))
+```
+
+### Fiber Management
+
+```typescript
+// Fork an effect into a separate fiber
+const fiber = Effect.fork(effect)
+
+// Join with a fiber
+Effect.join(fiber)
+
+// Interrupt a fiber
+Effect.interrupt(fiber)
+```
+
+### Scheduling and Time
+
+```typescript
+// Delay execution
+Effect.delay("1 seconds")
+
+// Repeat with schedule
+effect.pipe(
+  Effect.repeat(
+    Schedule.recurs(5)
+  )
+)
+
+// Retry with exponential backoff
+effect.pipe(
+  Effect.retry(
+    Schedule.exponential("1 seconds")
+  )
+)
+```
+
+### Stream Processing
+
+```typescript
+// Create a stream
+const stream = Stream.fromIterable([1, 2, 3])
+
+// Transform stream data
+stream.pipe(
+  Stream.map((n) => n * 2),
+  Stream.filter((n) => n > 2)
+)
+
+// Handle stream errors
+stream.pipe(
+  Stream.catchAll((error) => Stream.succeed(fallback))
+)
+```
+
+### Context Management
+
+```typescript
+// Define a service
+interface CounterService {
+  readonly _: unique symbol
+  readonly increment: Effect.Effect<never, never, number>
+  readonly get: Effect.Effect<never, never, number>
+}
+
+// Create a Tag for the service
+const CounterService = Context.Tag<CounterService>()
+
+// Implement the service
+const LiveCounterService = Layer.succeed(
+  CounterService,
+  CounterService.of({
+    increment: Effect.sync(() => /* implementation */),
+    get: Effect.sync(() => /* implementation */)
+  })
+)
+```
+
+### Schema Validation
+
+```typescript
+// Define a schema
+const UserSchema = Schema.struct({
+  id: Schema.number,
+  name: Schema.string,
+  email: Schema.string.pipe(Schema.email())
+})
+
+// Validate data
+const validateUser = (input: unknown) =>
+  Schema.parse(UserSchema)(input)
+
+// Use in Effect
+Effect.gen(function* (_) {
+  const data = yield* getInput
+  const user = yield* Effect.try({
+    try: () => validateUser(data),
+    catch: (e) => new ValidationError(e)
+  })
+  return user
+})
+```
+
+### Metrics and Telemetry
+
+```typescript
+// Add spans for tracing
+effect.pipe(
+  Effect.withSpan("operation-name"),
+  Effect.annotateSpan("key", "value")
+)
+
+// Log information
+Effect.log("message")
+Effect.logInfo("info message")
+Effect.logError("error message")
+
+// Measure metrics
+Effect.metric.counter("counter-name").pipe(
+  Effect.tap((counter) => counter.increment())
+)
+```
+
+### Testing Patterns
+
+```typescript
+// Create test environment
+const TestEnv = Layer.succeed(
+  ServiceA,
+  MockServiceA
+).pipe(
+  Layer.provide(
+    Layer.succeed(ServiceB, MockServiceB)
+  )
+)
+
+// Write tests
+test("operation succeeds", () =>
+  Effect.gen(function* (_) {
+    const result = yield* operation
+    expect(result).toBe(expected)
+  }).pipe(
+    Effect.provide(TestEnv),
+    Effect.runPromise
+  )
+)
+```
+
+## Effect Data Types and Utilities
+
+### Option Type
+
+```typescript
+// Working with optional values
+const maybeValue: Option<string> = Option.some("value")
+const none: Option<never> = Option.none()
+
+// Transforming options
+maybeValue.pipe(
+  Option.map((s) => s.toUpperCase()),
+  Option.getOrElse(() => "default")
+)
+```
+
+### Either Type
+
+```typescript
+// Representing success/failure
+const result: Either<Error, string> = Either.right("success")
+const error: Either<Error, never> = Either.left(new Error())
+
+// Transforming either
+result.pipe(
+  Either.map((s) => s.toUpperCase()),
+  Either.mapLeft((e) => new CustomError(e))
+)
+```
+
+### Chunk Type
+
+```typescript
+// Efficient immutable arrays
+const chunk = Chunk.from([1, 2, 3])
+
+// Transforming chunks
+chunk.pipe(
+  Chunk.map((n) => n * 2),
+  Chunk.filter((n) => n > 2)
+)
+```
+
+## Production Best Practices
+
+### Error Handling
+
+```typescript
+// Define custom error types
+class DatabaseError extends Data.TaggedError("DatabaseError")<{
+  readonly cause: Error
+}> {}
+
+// Handle errors appropriately
+effect.pipe(
+  Effect.catchTag("DatabaseError", (error) => recovery),
+  Effect.catchAll((error) => {
+    Effect.logError("Unexpected error", error)
+    return Effect.fail(new AppError(error))
+  })
+)
+```
+
+### Resource Management
+
+```typescript
+// Proper resource cleanup
+const withResource = Effect.acquireRelease(
+  acquire,
+  (resource) => Effect.sync(() => {
+    resource.close()
+    cleanup()
+  })
+)
+
+// Using Scope for complex resource management
+Effect.gen(function* (_) {
+  const scope = yield* Effect.scope
+  yield* resource1.pipe(Effect.scoped)
+  yield* resource2.pipe(Effect.scoped)
+}).pipe(Effect.scoped)
+```
+
+### Performance Optimization
+
+```typescript
+// Cache expensive operations
+const cachedOperation = effect.pipe(
+  Effect.memoize,
+  Effect.map((getMemoized) => getMemoized)
+)
+
+// Parallel execution
+Effect.all([effect1, effect2], {
+  concurrency: "unbounded"
+})
+```
+
+### Monitoring and Logging
+
+```typescript
+// Structured logging
+Effect.gen(function* (_) {
+  yield* Effect.logAnnotate({
+    userId: "123",
+    operation: "payment"
+  })(
+    Effect.log("Processing payment")
+  )
+})
+
+// Metrics collection
+const withMetrics = effect.pipe(
+  Effect.metric.histogram("operation_duration").pipe(
+    Effect.tap((histogram) =>
+      Effect.sync(() => histogram.record(duration))
+    )
+  )
+)
+```
+
+### Configuration Management
+
+```typescript
+// Type-safe configuration
+interface AppConfig {
+  readonly port: number
+  readonly apiKey: string
+}
+
+const AppConfig = Context.Tag<AppConfig>()
+
+const LiveConfig = Layer.succeed(
+  AppConfig,
+  {
+    port: 3000,
+    apiKey: process.env.API_KEY!
+  }
+)
+
+// Using configuration
+const program = Effect.gen(function* (_) {
+  const config = yield* AppConfig
+  return config.port
+})
+```
+
+Remember:
+- Always handle errors explicitly and appropriately
+- Use proper resource management with Effect.acquireRelease
+- Implement proper logging and monitoring
+- Use type-safe configuration management
+- Optimize performance where necessary
+- Test thoroughly using Effect's testing utilities
+- Follow functional programming principles
+- Use proper dependency injection
+- Implement proper error recovery strategies
+- Monitor and log operations effectively

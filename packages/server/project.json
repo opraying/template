@@ -1,0 +1,29 @@
+{
+  "name": "pkgs-server",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/server/src",
+  "projectType": "library",
+  "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/node_modules/.vitest/packages/server", "{workspaceRoot}/coverage/packages/server"],
+      "options": {
+        "command": "pnpm xdev test --project pkgs-server"
+      }
+    },
+    "madge": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "madge --ts-config ./tsconfig.lib.json --circular --no-color --no-spinner --extensions ts,tsx ./src",
+        "cwd": "packages/server"
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsgo -p packages/server/tsconfig.check.json"
+      }
+    }
+  },
+  "tags": []
+}

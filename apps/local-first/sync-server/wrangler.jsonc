@@ -1,0 +1,176 @@
+{
+  "$schema": "https://www.unpkg.com/wrangler/config-schema.json",
+  "name": "template-sync-server",
+  "compatibility_date": "2025-09-25",
+  "compatibility_flags": ["nodejs_compat", "enable_request_signal"],
+  "main": "index.ts",
+  "send_metrics": false,
+  "workers_dev": false,
+  "preview_urls": false,
+  "logpush": false,
+  "upload_source_maps": true,
+  "placement": {
+    "mode": "smart",
+  },
+  "rules": [
+    {
+      "globs": ["**/*.js"],
+      "type": "ESModule",
+    },
+  ],
+  "limits": {
+    "cpu_ms": 30,
+  },
+  "observability": {
+    "enabled": true,
+  },
+  "routes": [
+    {
+      "pattern": "template-web.opraying.com/sync*",
+      "zone_name": "opraying.com",
+    },
+  ],
+  "workflows": [
+    {
+      "name": "DestroyVaultWorkflow",
+      "binding": "DestroyVaultWorkflow",
+      "class_name": "DestroyVaultWorkflow",
+      "script_name": "template-sync-server",
+    },
+  ],
+  "services": [
+    {
+      "binding": "SYNC_AGENT_CLIENT",
+      "service": "template-sync-agent-client",
+    },
+    {
+      "binding": "PURCHASE",
+      "service": "infra-purchase",
+    },
+  ],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "template-local-first-sync-server",
+      "database_id": "f9dd13ad-d2a0-4841-b737-4baad61e833f",
+      "migrations_dir": "db/migrations",
+    },
+  ],
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "SYNC_SERVER_DURABLE_OBJECT",
+        "class_name": "SyncServerDurableObject",
+      },
+    ],
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": ["SyncServerDurableObject"],
+    },
+  ],
+  "ratelimits": [
+    {
+      "name": "RATE_LIMIT_TIER_LOW",
+      "namespace_id": "1000",
+      "simple": {
+        "limit": 25,
+        "period": 60,
+      },
+    },
+    {
+      "name": "RATE_LIMIT_TIER_BASIC",
+      "namespace_id": "1001",
+      "simple": {
+        "limit": 100,
+        "period": 60,
+      },
+    },
+    {
+      "name": "RATE_LIMIT_TIER_PRO",
+      "namespace_id": "1002",
+      "simple": {
+        "limit": 240,
+        "period": 60,
+      },
+    },
+  ],
+  "env": {
+    "test": {
+      "workers_dev": true,
+      "routes": [
+        {
+          "pattern": "test-template-web.opraying.com/sync*",
+          "zone_name": "opraying.com",
+        },
+      ],
+      "workflows": [
+        {
+          "name": "DestroyVaultWorkflowTest",
+          "binding": "DestroyVaultWorkflow",
+          "class_name": "DestroyVaultWorkflow",
+          "script_name": "template-sync-server-test",
+        },
+      ],
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "template-local-first-sync-server",
+          "database_id": "f9dd13ad-d2a0-4841-b737-4baad61e833f",
+        },
+      ],
+      "durable_objects": {
+        "bindings": [
+          {
+            "name": "SYNC_SERVER_DURABLE_OBJECT",
+            "class_name": "SyncServerDurableObject",
+            "script_name": "template-sync-server-test",
+          },
+        ],
+      },
+      "migrations": [
+        {
+          "tag": "v1",
+          "new_sqlite_classes": ["SyncServerDurableObject"],
+        },
+      ],
+      "services": [
+        {
+          "binding": "SYNC_AGENT_CLIENT",
+          "service": "template-sync-agent-client-test",
+        },
+        {
+          "binding": "PURCHASE",
+          "service": "infra-purchase-test",
+        },
+      ],
+      "ratelimits": [
+        {
+          "name": "RATE_LIMIT_TIER_LOW",
+          "namespace_id": "1000",
+          "simple": {
+            "limit": 25,
+            "period": 60,
+          },
+        },
+        {
+          "name": "RATE_LIMIT_TIER_BASIC",
+          "namespace_id": "1001",
+          "simple": {
+            "limit": 100,
+            "period": 60,
+          },
+        },
+        {
+          "name": "RATE_LIMIT_TIER_PRO",
+          "namespace_id": "1002",
+          "simple": {
+            "limit": 240,
+            "period": 60,
+          },
+        },
+      ],
+    },
+  },
+}

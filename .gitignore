@@ -1,0 +1,93 @@
+# See http://help.github.com/ignore-files/ for more about ignoring files.
+
+# compiled output
+dist
+tmp
+/out-tsc
+*.tsbuildinfo
+.direnv/
+.bundle
+verdor
+
+# dependencies
+node_modules
+
+# IDEs and editors
+/.idea
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+
+# IDE - VSCode
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+**/.vscode/*
+.cursor/rules/nx-rules.mdc
+.github/instructions/nx.instructions.md
+
+# misc
+cspell.json
+npm-debug.log
+yarn-error.log
+testem.log
+logs
+
+# System Files
+.DS_Store
+Thumbs.db
+
+# Python
+.venv/
+
+# Expo
+node_modules/
+.expo/
+.yarn/
+npm-debug.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.orig.*
+web-build/
+cache/
+.expo
+Gymfile
+
+.nx/cache
+.nx/workspace-data
+
+.obsidian
+
+# jsx-email build output
+.rendered/
+
+vite.config.mts.*
+
+.wrangler
+.miniflare-cache
+.scripts
+coverage
+build
+.sanity
+.react-router
+traceDir
+.env.keys
+**/cms/.env
+
+**/dev.db
+**/dev.db-journal
+
+**/analyze-*.html
+**/analyze-*.json
+
+private
+scratchpad
+docs/private

@@ -1,0 +1,36 @@
+{
+  "name": "pkgs-emails",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/emials/src",
+  "projectType": "library",
+  "targets": {
+    "preview": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "email preview ./src/previews",
+        "cwd": "packages/emails"
+      }
+    },
+    "check": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "find ./src/templates -name '*.tsx' -exec email check {} \\;",
+        "cwd": "packages/emails"
+      }
+    },
+    "madge": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "madge --ts-config ./tsconfig.json --circular --no-color --no-spinner --extensions ts,tsx ./src",
+        "cwd": "packages/emails"
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsgo -p packages/emails/tsconfig.check.json"
+      }
+    }
+  },
+  "tags": []
+}

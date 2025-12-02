@@ -1,0 +1,32 @@
+{
+  "name": "pkgs-preset-react-native",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/preset-react-native/src",
+  "projectType": "library",
+  "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "outputs": [
+        "{workspaceRoot}/node_modules/.vitest/packages/preset-react-native",
+        "{workspaceRoot}/coverage/packages/preset-react-native"
+      ],
+      "options": {
+        "command": "pnpm xdev test --project pkgs-preset-react-native"
+      }
+    },
+    "madge": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "madge --ts-config ./tsconfig.lib.json --circular --no-color --no-spinner --extensions ts,tsx ./src",
+        "cwd": "packages/preset-react-native"
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsgo -p packages/preset-react-native/tsconfig.check.json"
+      }
+    }
+  },
+  "tags": []
+}

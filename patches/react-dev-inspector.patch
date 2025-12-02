@@ -1,0 +1,25 @@
+diff --git a/dist/esm/Inspector/utils/inspect.js b/dist/esm/Inspector/utils/inspect.js
+index 49233225e850e3201d775ca46035aa74b332f1dd..934fb7af427acd1c96da15a0024f032124e196d7 100644
+--- a/dist/esm/Inspector/utils/inspect.js
++++ b/dist/esm/Inspector/utils/inspect.js
+@@ -46,12 +46,17 @@ export const getCodeInfoFromDebugSource = (fiber) => {
+ export const getCodeInfoFromProps = (fiber) => {
+     if (!fiber?.pendingProps)
+         return undefined;
+-    const { 'data-inspector-line': lineNumber, 'data-inspector-column': columnNumber, 'data-inspector-relative-path': relativePath, } = fiber.pendingProps;
+-    if (lineNumber && columnNumber && relativePath) {
++
++    const debugSource = fiber.pendingProps.__source;
++    if (!debugSource)
++        return undefined;
++
++    const { lineNumber, columnNumber, fileName: absolutePath } = debugSource;
++    if (lineNumber && columnNumber && absolutePath) {
+         return {
+             lineNumber,
+             columnNumber,
+-            relativePath,
++            absolutePath,
+         };
+     }
+     return undefined;

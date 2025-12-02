@@ -1,0 +1,5 @@
+**/vendor linguist-vendored
+
+**/__test__/*.json linguist-generated
+**/tests/*.json linguist-generated
+**/fixtures/*.json linguist-generated

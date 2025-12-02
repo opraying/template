@@ -1,0 +1,15 @@
+diff --git a/build/src/run/ios/XcodeBuild.js b/build/src/run/ios/XcodeBuild.js
+index 6169d0174a87249d8ee59a5b105a1158ef6aae1b..f10ce74de85a3cce0ca156a89d6d5b124fb3f69a 100644
+--- a/build/src/run/ios/XcodeBuild.js
++++ b/build/src/run/ios/XcodeBuild.js
+@@ -229,7 +229,9 @@ async function getXcodeBuildArgsAsync(props) {
+         '-scheme',
+         props.scheme,
+         '-destination',
+-        `id=${props.device.udid}`
++        `id=${props.device.udid}`,
++        '-derivedDataPath',
++        './ios/build',
+     ];
+     if (!props.isSimulator || (0, _simulatorCodeSigning.simulatorBuildRequiresCodeSigning)(props.projectRoot)) {
+         const developmentTeamId = await (0, _configureCodeSigning.ensureDeviceIsCodeSignedForDeploymentAsync)(props.projectRoot);

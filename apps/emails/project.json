@@ -1,0 +1,40 @@
+{
+  "name": "template-emails",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/emails",
+  "projectType": "library",
+  "targets": {
+    "preview": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "options": {
+        "command": "email preview ./templates",
+        "cwd": "apps/emails"
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{projectRoot}/.rendered"],
+      "dependsOn": [],
+      "options": {
+        "command": "pnpm xdev email build --cwd=apps/emails"
+      }
+    },
+    "deploy": {
+      "executor": "nx:run-commands",
+      "outputs": ["{projectRoot}/.rendered"],
+      "options": {
+        "command": "pnpm xdev email deploy --cwd=apps/emails"
+      }
+    },
+    "check": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "options": {
+        "command": "find ./templates -name '*.tsx' -exec email check {} \\;",
+        "cwd": "apps/emails"
+      }
+    }
+  },
+  "tags": []
+}

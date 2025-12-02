@@ -1,0 +1,9 @@
+{
+  "name": "template-cms",
+  "type": "module",
+  "version": "0.0.0",
+  "sideEffects": [],
+  "dependencies": {
+    "styled-components": "^6.1.13"
+  }
+}

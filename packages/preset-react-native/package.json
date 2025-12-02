@@ -1,0 +1,6 @@
+{
+  "name": "@xstack/preset-react-native",
+  "type": "module",
+  "version": "0.0.0",
+  "sideEffects": false
+}

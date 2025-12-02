@@ -1,0 +1,32 @@
+{
+  "name": "pkgs-user-kit",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/user-kit/src",
+  "projectType": "library",
+  "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "outputs": [
+        "{workspaceRoot}/node_modules/.vitest/packages/user-kit",
+        "{workspaceRoot}/coverage/packages/user-kit"
+      ],
+      "options": {
+        "command": "pnpm xdev test --project pkgs-user-kit"
+      }
+    },
+    "madge": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "madge --ts-config ./tsconfig.lib.json --circular --no-color --no-spinner --extensions ts,tsx ./src",
+        "cwd": "packages/user-kit"
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsgo -p packages/user-kit/tsconfig.check.json"
+      }
+    }
+  },
+  "tags": []
+}

@@ -1,0 +1,43 @@
+name: 🔄 Template Sync
+
+on:
+  schedule:
+    - cron: '0 0 1 * *' # 🕛 Run monthly on the 1st at 00:00 UTC
+  workflow_dispatch:
+
+permissions:
+  actions: write
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  repo-sync:
+    name: 🔁 Sync Repository
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v5
+        with:
+          token: ${{ secrets.REPO_SYNC_TOKEN }}
+      - name: 🔄 Sync Template
+        uses: xesrevinu/actions-template-sync@main
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          target_gh_token: ${{ secrets.REPO_SYNC_TOKEN }}
+          source_gh_token: ${{ secrets.REPO_SYNC_TOKEN }}
+          source_repo_path: opraying/template
+          upstream_branch: main
+          is_pr_cleanup: true
+          pr_labels: 🔁 template-sync
+      - name: 📊 Report Sync Status
+        if: always()
+        run: |
+          if [ ${{ job.status }} == 'success' ]; then
+            echo "✅ Template sync completed successfully!"
+          else
+            echo "❌ Template sync failed. Please check the logs for details."
+          fi

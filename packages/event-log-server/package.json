@@ -1,0 +1,6 @@
+{
+  "name": "@xstack/event-log-server",
+  "type": "module",
+  "version": "0.0.0",
+  "sideEffects": false
+}

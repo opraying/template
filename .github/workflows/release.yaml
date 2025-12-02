@@ -1,0 +1,257 @@
+name: 🚀 Release
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - main
+      - test
+      - staging
+      - /^feat-.*$/
+  push:
+    branches:
+      - main
+      - test
+      - staging
+      - /^feat-.*$/
+
+permissions:
+  actions: write
+  deployments: write
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DISCORD_DEPLOY_WEBHOOK: ${{ secrets.DISCORD_DEPLOY_WEBHOOK }}
+
+jobs:
+  check-build:
+    name: Check & Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    outputs:
+      affected-web: ${{ steps.detect-affected.outputs.affected-web }}
+      affected-native: ${{ steps.detect-affected.outputs.affected-native }}
+      affected-web-list: ${{ steps.detect-affected.outputs.affected-web-list }}
+      affected-native-list: ${{ steps.detect-affected.outputs.affected-native-list }}
+    steps:
+      - name: ⬇️ Checkout repo
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: 🚧 Setup
+        uses: ./.github/actions/setup
+
+      - name: 🔍 Detect Affected
+        id: detect-affected
+        run: |
+          echo "BASE: ${{ env.NX_BASE }}"
+          echo "HEAD: ${{ env.NX_HEAD }}"
+
+          # 检测受影响的 Web 项目 (build + app-build targets)
+          WEB_PROJECTS=$(nx show projects --affected -t=build,app-build --json --base=${{ env.NX_BASE }} --head=${{ env.NX_HEAD }} 2>/dev/null || echo "[]")
+          echo "Affected Web Projects: $WEB_PROJECTS"
+
+          # 检测受影响的 Native 项目 (native-build target)
+          NATIVE_PROJECTS=$(nx show projects --affected -t=native-build --json --base=${{ env.NX_BASE }} --head=${{ env.NX_HEAD }} 2>/dev/null || echo "[]")
+          echo "Affected Native Projects: $NATIVE_PROJECTS"
+
+          # 判断是否有受影响的项目
+          HAS_WEB=$(echo "$WEB_PROJECTS" | jq 'length > 0')
+          HAS_NATIVE=$(echo "$NATIVE_PROJECTS" | jq 'length > 0')
+
+          echo "Has Web Projects: $HAS_WEB"
+          echo "Has Native Projects: $HAS_NATIVE"
+
+          # 设置输出
+          echo "affected-web=$HAS_WEB" >> $GITHUB_OUTPUT
+          echo "affected-native=$HAS_NATIVE" >> $GITHUB_OUTPUT
+          echo "affected-web-list=$WEB_PROJECTS" >> $GITHUB_OUTPUT
+          echo "affected-native-list=$NATIVE_PROJECTS" >> $GITHUB_OUTPUT
+
+      - name: 🔬 Lint
+        run: pnpm lint
+
+      - name: ♻️ Run Circular Dependency Check
+        run: pnpm nx affected --target=madge
+
+      - name: 🔍 Run Typecheck
+        run: pnpm nx affected --target=typecheck
+
+      - name: 🔍 Run Unit Tests
+        run: echo 'TODO unit tests'
+
+      - name: 🏗️ Build Web Libraries
+        if: steps.detect-affected.outputs.affected-web == 'true'
+        run: pnpm nx affected --target=build --parallel=1
+
+      - name: ⚡ Build Web Apps
+        if: steps.detect-affected.outputs.affected-web == 'true'
+        run: pnpm nx affected --target=app-build --parallel=1
+
+      - name: 🔍 Run Web apps E2E Tests
+        if: steps.detect-affected.outputs.affected-web == 'true'
+        run: pnpm nx affected --target=e2e --parallel=1
+
+      - name: 📦 Zip Web Artifacts
+        run: |
+          if [ ! -d "dist" ]; then
+            echo "dist folder not found"
+            exit 0
+          fi
+          zip -r dist-web.zip dist
+
+      - name: ⬆️ Upload Web Apps Artifacts
+        uses: actions/upload-artifact@v5
+        continue-on-error: true
+        with:
+          if-no-files-found: ignore
+          name: dist-web
+          path: dist-web.zip
+          retention-days: 1
+
+  release-web:
+    name: Release Web Apps
+    runs-on: ubuntu-latest
+    needs: [check-build]
+    environment: ${{ (github.ref_name == 'test' || startsWith(github.ref_name, 'feat-')) && 'test' || github.ref_name == 'staging' && 'staging' || github.ref_name == 'main' && 'production' }}
+    if: ${{ needs.check-build.outputs.affected-web == 'true' && (github.ref_name == 'main' || github.ref_name == 'test' || startsWith(github.ref_name, 'feat-') || github.ref_name == 'staging') && github.event_name == 'push' }}
+    steps:
+      - name: ⬇️ Checkout repo
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: 🚧 Setup
+        uses: ./.github/actions/setup
+
+      - name: ⬇️ Download Web Artifacts
+        uses: actions/download-artifact@v5
+        continue-on-error: true
+        with:
+          name: dist-web
+
+      - name: 📦 Unzip Web Artifacts
+        run: |
+          if [ ! -f "dist-web.zip" ]; then
+            echo "dist-web.zip not found"
+            exit 0
+          fi
+          unzip dist-web.zip
+
+      - name: 🚀 Deploy
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: pnpm nx affected --target=deploy --parallel=1
+
+      - name: 🚀 Deploy Web App
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: pnpm nx affected --target=app-deploy --parallel=1
+
+  build-native:
+    name: Build Native Apps
+    environment: ${{ (github.ref_name == 'test' || startsWith(github.ref_name, 'feat-')) && 'test' || github.ref_name == 'staging' && 'staging' || github.ref_name == 'main' && 'production' }}
+    if: ${{ needs.check-build.outputs.affected-native == 'true' && (github.ref_name == 'main' || github.ref_name == 'test' || startsWith(github.ref_name, 'feat-') || github.ref_name == 'staging') && github.event_name == 'push' }}
+    needs: [check-build]
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        include:
+          - os: ubuntu-latest
+            platform: linux
+          - os: windows-latest
+            platform: windows
+          - os: macos-latest
+            platform: macos
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: ⬇️ Checkout repo
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: 🚧 Setup
+        uses: ./.github/actions/setup
+
+      - name: 🏗️ Build Native Libraries
+        run: pnpm nx affected --target=build --parallel=1
+
+      - name: ⚡ Build Native Apps
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: pnpm nx affected --target=native-build --parallel=1
+
+      - name: 🔍 Run Native apps E2E Tests
+        run: echo 'TODO native apps e2e tests'
+
+      - name: 📦 Zip Native Artifacts (${{ matrix.platform }})
+        shell: bash
+        run: |
+          if [ ! -d "dist" ]; then
+            echo "dist folder not found"
+            exit 0
+          fi
+          if [ "${{ matrix.platform }}" = "windows" ]; then
+            7z a dist-native-${{ matrix.platform }}.zip dist
+          else
+            zip -r dist-native-${{ matrix.platform }}.zip dist
+          fi
+
+      - name: ⬆️ Upload Native Apps Artifacts (${{ matrix.platform }})
+        uses: actions/upload-artifact@v5
+        continue-on-error: true
+        with:
+          if-no-files-found: ignore
+          name: dist-native-${{ matrix.platform }}
+          path: dist-native-${{ matrix.platform }}.zip
+          retention-days: 1
+
+  release-native:
+    name: Release Native Apps
+    runs-on: ubuntu-latest
+    needs: [build-native]
+    environment: ${{ (github.ref_name == 'test' || startsWith(github.ref_name, 'feat-')) && 'test' || github.ref_name == 'staging' && 'staging' || github.ref_name == 'main' && 'production' }}
+    if: ${{ github.ref_name == 'main' && github.event_name == 'push' }}
+    steps:
+      - name: ⬇️ Checkout repo
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: ⬇️ Download Native Artifacts (Linux)
+        uses: actions/download-artifact@v5
+        continue-on-error: true
+        with:
+          name: dist-native-linux
+
+      - name: ⬇️ Download Native Artifacts (Windows)
+        uses: actions/download-artifact@v5
+        continue-on-error: true
+        with:
+          name: dist-native-windows
+
+      - name: ⬇️ Download Native Artifacts (macOS)
+        uses: actions/download-artifact@v5
+        continue-on-error: true
+        with:
+          name: dist-native-macos
+
+      - name: 🚀 Create GitHub Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Create release with native artifacts
+          echo "Creating GitHub release with native artifacts"
+          echo "Affected Native Projects: ${{ needs.check-build.outputs.affected-native-list }}"
+          # This would typically use gh CLI or actions/create-release
+          # Implementation depends on your release strategy

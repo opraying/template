@@ -1,0 +1,29 @@
+{
+  "name": "pkgs-fx",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/fx/src",
+  "projectType": "library",
+  "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/node_modules/.vitest/packages/fx", "{workspaceRoot}/coverage/packages/fx"],
+      "options": {
+        "command": "pnpm xdev test --project pkgs-fx"
+      }
+    },
+    "madge": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "madge --ts-config ./tsconfig.lib.json --circular --no-color --no-spinner --extensions ts,tsx ./src",
+        "cwd": "packages/fx"
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsgo -p packages/fx/tsconfig.check.json"
+      }
+    }
+  },
+  "tags": []
+}

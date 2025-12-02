@@ -1,0 +1,32 @@
+{
+  "name": "pkgs-tailwind",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/tailwind/src",
+  "projectType": "library",
+  "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "outputs": [
+        "{workspaceRoot}/node_modules/.vitest/packages/tailwind",
+        "{workspaceRoot}/coverage/packages/tailwind"
+      ],
+      "options": {
+        "command": "pnpm xdev test --project pkgs-tailwind"
+      }
+    },
+    "madge": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "madge --ts-config ./tsconfig.lib.json --circular --no-color --no-spinner --extensions ts,tsx ./src",
+        "cwd": "packages/tailwind"
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsgo -p packages/tailwind/tsconfig.check.json"
+      }
+    }
+  },
+  "tags": []
+}

@@ -1,0 +1,22 @@
+diff --git a/package.json b/package.json
+index ac4246dc7abc217ccf3863791bfada98bb9257d2..d72ffa1f0bb321abe99085539a9f0703236546c7 100644
+--- a/package.json
++++ b/package.json
+@@ -11,16 +11,7 @@
+ 		"url": "https://sindresorhus.com"
+ 	},
+ 	"type": "module",
+-	"exports": {
+-		"node": {
+-			"types": "./node.d.ts",
+-			"import": "./node.js"
+-		},
+-		"default": {
+-			"types": "./default.d.ts",
+-			"import": "./default.js"
+-		}
+-	},
++	"main": "./node.js",
+ 	"sideEffects": false,
+ 	"engines": {
+ 		"node": ">=18"

@@ -1,0 +1,15 @@
+diff --git a/dist/esm/migration/file-migration-provider.js b/dist/esm/migration/file-migration-provider.js
+index f410a83b59570edf52ac97e9aef6d9c351659109..2ab9322e7e4f7af13cb31dc0b2aa9907cb136883 100644
+--- a/dist/esm/migration/file-migration-provider.js
++++ b/dist/esm/migration/file-migration-provider.js
+@@ -29,8 +29,8 @@ export class FileMigrationProvider {
+                 (fileName.endsWith('.ts') && !fileName.endsWith('.d.ts')) ||
+                 fileName.endsWith('.mjs') ||
+                 (fileName.endsWith('.mts') && !fileName.endsWith('.d.mts'))) {
+-                const migration = await import(
+-                /* webpackIgnore: true */ this.#props.path.join(this.#props.migrationFolder, fileName));
++                // fix metro build issue
++                const migration = {};
+                 const migrationKey = fileName.substring(0, fileName.lastIndexOf('.'));
+                 // Handle esModuleInterop export's `default` prop...
+                 if (isMigration(migration?.default)) {

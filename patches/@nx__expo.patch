@@ -1,0 +1,13 @@
+diff --git a/plugins/with-nx-metro.js b/plugins/with-nx-metro.js
+index 6a284bd68efc7d03accbf6361b92fdc575eb90f0..4d8c9f803e080aad3853391503c3f0f38f60a555 100644
+--- a/plugins/with-nx-metro.js
++++ b/plugins/with-nx-metro.js
+@@ -21,7 +21,7 @@ function getMetroConfig() {
+     return metroConfig;
+ }
+ const metro_resolver_1 = require("./metro-resolver");
+-async function withNxMetro(userConfig, opts = {}) {
++function withNxMetro(userConfig, opts = {}) {
+     const extensions = ['', 'ts', 'tsx', 'js', 'jsx', 'json'];
+     if (opts.debug)
+         process.env.NX_REACT_NATIVE_DEBUG = 'true';

@@ -1,0 +1,28 @@
+diff --git a/server.edge.js b/server.edge.js
+index d64b9da7360a617a98a1cd95733bc086df238b89..4bef621eb281809b6b73bba3f27b4cb3dca339be 100644
+--- a/server.edge.js
++++ b/server.edge.js
+@@ -4,7 +4,7 @@ var b;
+ var l;
+ if (process.env.NODE_ENV === 'production') {
+   b = require('./cjs/react-dom-server.edge.production.js');
+-  l = require('./cjs/react-dom-server-legacy.browser.production.js');
++  // l = require('./cjs/react-dom-server-legacy.browser.production.js');
+ } else {
+   b = require('./cjs/react-dom-server.edge.development.js');
+   l = require('./cjs/react-dom-server-legacy.browser.development.js');
+@@ -12,8 +12,12 @@ if (process.env.NODE_ENV === 'production') {
+ 
+ exports.version = b.version;
+ exports.renderToReadableStream = b.renderToReadableStream;
+-exports.renderToString = l.renderToString;
+-exports.renderToStaticMarkup = l.renderToStaticMarkup;
++exports.renderToString = () => {
++  throw new Error('Not implemented');
++}
++exports.renderToStaticMarkup = () => {
++  throw new Error('Not implemented');
++}
+ if (b.resume) {
+   exports.resume = b.resume;
+ }

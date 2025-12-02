@@ -1,0 +1,22 @@
+[
+  {
+    "adapter": "JavaScript",
+    "label": "Debug JS file",
+    "type": "node",
+    "request": "launch",
+    "program": "$ZED_FILE",
+    "skipFiles": ["<node_internals>/**"],
+    "cwd": "$ZED_WORKTREE_ROOT",
+    "runtimeExecutable": "tsx"
+  },
+  {
+    "adapter": "JavaScript",
+    "label": "Debug JS terminal",
+    "type": "node",
+    "request": "launch",
+    "skipFiles": ["<node_internals>/**"],
+    "cwd": "$ZED_WORKTREE_ROOT",
+    "args": [],
+    "runtimeArgs": []
+  }
+]

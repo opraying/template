@@ -1,0 +1,29 @@
+{
+  "name": "pkgs-vite",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/vite/src",
+  "projectType": "library",
+  "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/node_modules/.vitest/packages/vite", "{workspaceRoot}/coverage/packages/vite"],
+      "options": {
+        "command": "pnpm xdev test --project pkgs-vite"
+      }
+    },
+    "madge": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "madge --ts-config ./tsconfig.lib.json --circular --no-color --no-spinner --extensions ts,tsx ./src",
+        "cwd": "packages/vite"
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsgo -p packages/vite/tsconfig.check.json"
+      }
+    }
+  },
+  "tags": []
+}

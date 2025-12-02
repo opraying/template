@@ -1,0 +1,29 @@
+{
+  "name": "pkgs-i18n",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/i18n/src",
+  "projectType": "library",
+  "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/node_modules/.vitest/packages/i18n", "{workspaceRoot}/coverage/packages/i18n"],
+      "options": {
+        "command": "pnpm xdev test --project pkgs-i18n"
+      }
+    },
+    "madge": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "madge --ts-config ./tsconfig.lib.json --circular --no-color --no-spinner --extensions ts,tsx ./src",
+        "cwd": "packages/i18n"
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsgo -p packages/i18n/tsconfig.check.json"
+      }
+    }
+  },
+  "tags": []
+}

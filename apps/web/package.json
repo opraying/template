@@ -1,0 +1,11 @@
+{
+  "name": "template-web",
+  "type": "module",
+  "version": "0.0.0",
+  "private": true,
+  "sideEffects": [],
+  "dependencies": {
+    "isbot": "latest",
+    "react-router": "^7.9.6"
+  }
+}

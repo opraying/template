@@ -1,0 +1,177 @@
+---
+description: Local-first event log system
+globs: **/event-log/**/*.ts
+alwaysApply: false
+---
+# Todo Event Log System Documentation
+
+## Overview
+
+The Todo Event Log system implements a local-first event sourcing pattern for managing todo items. It handles creation, updates, and deletion of todos while maintaining data consistency and reactivity.
+
+- Always use the event system for modifications
+- Handle errors appropriately
+- Maintain atomicity of operations
+- Use proper typing for payloads
+- Leverage the reactivity system for UI updates 
+
+## Event Definition
+
+Each event is defined with three key properties:
+
+- **tag**: Unique identifier for the event type
+- **primaryKey**: Function to extract the primary key from the payload
+- **payload**: Schema definition for the event data
+
+1. **Event Naming**:
+   - Use clear, action-based names
+   - Follow the pattern: `[Action][Entity]`
+   - Example: `AddTodo`, `RemoveTodo`
+
+2. **Payload Design**:
+   - Include only necessary data
+   - Use optional fields when appropriate
+   - Maintain backward compatibility
+
+3. **Primary Keys**:
+   - Choose stable, unique identifiers
+   - Use typed IDs (e.g., `TodoId`)
+   - Consider composite keys when needed
+
+4. **Schema Definition**:
+   - Define strict validation rules
+   - Use appropriate Schema types
+   - Document constraints 
+  
+## Event Log Structure
+
+The Todo Event Log is defined using the `Events.make` helper, which creates a type-safe event system:
+
+```typescript
+export class TodoEvents extends Events.make(
+  (group) =>
+    group
+      .add({
+        tag: "AddTodo",
+        primaryKey: (_) => _.id,
+        payload: Schema.Struct({
+          ...TodoTable.fields,
+          id: TodoId,
+        }),
+      })
+      .add({
+        tag: "RemoveTodo",
+        primaryKey: (_) => _.id,
+        payload: Schema.Struct({
+          id: TodoId,
+        }),
+      })
+      .add({
+        tag: "UpdateTodo",
+        primaryKey: (_) => _.id,
+        payload: Schema.Struct({
+          id: TodoId,
+          content: Schema.optional(Schema.String),
+          completed: Schema.optional(Schema.Boolean),
+        }),
+      }),
+  {
+    reactivity: ["todo"],
+    handlers: (handlers) => Effect.gen(/* ... */)
+  }
+) {}
+```
+
+## Schema Validation
+
+Events use Effect's Schema system for runtime validation:
+```typescript
+Schema.Struct({
+  id: TodoId,
+  content: Schema.optional(Schema.String),
+  completed: Schema.optional(Schema.Boolean)
+})
+```
+
+## Reactivity Configuration
+```typescript
+{
+  reactivity: ["todo"],  // Collections that trigger updates
+  handlers: (handlers) => Effect.gen(/* ... */)
+}
+```
+
+## Event Handlers
+
+```typescript
+handlers
+  .handle("AddTodo", ({ payload }) =>
+    Effect.gen(function* () {
+      yield* Effect.logInfo("add todo", payload)
+      yield* todoRepository.insert(payload)
+    })
+  )
+  .handle("RemoveTodo", /* ... */)
+  .handle("UpdateTodo", /* ... */)
+```
+
+## Basic Operations
+
+```typescript
+todoEvents("AddTodo", {
+  id: TodoId.make(crypto.randomUUID()),
+  content: "New task",
+  completed: false
+})
+
+todoEvents("UpdateTodo", {
+  id: existingId,
+  content: "Updated content",
+  completed: true
+})
+
+todoEvents("RemoveTodo", {
+  id: existingId
+})
+```
+
+## Using with TodoService
+
+```typescript
+const newTodo = yield* todoService.createTodo({
+  content: "Buy groceries"
+})
+
+yield* todoService.updateTodo(todoId, {
+  completed: !currentTodo.completed
+})
+
+const activeTodos = yield* todoService.getFilteredTodos("active")
+
+const filteredTodosStream = todoService.getFilteredTodosStream("active")
+
+const allTodosStream = todoService.allTodosStream
+
+const todos = runtime.rx((ctx) =>
+  Effect.gen(function* () {
+    const filterType = ctx.get(filter)
+    return yield* todoService.getFilteredTodosStream(filterType)
+  })
+)
+```
+
+## Error Handling
+
+```typescript
+const result = yield* todoService.updateTodo(id, {
+  content: "Updated content"
+}).pipe(
+  Effect.catchTag("TodoNotFoundError", (error) => 
+    Effect.logError("Todo not found", { id, error })
+  ),
+  Effect.tapError((error) => 
+    toast.error("Failed to update todo")
+  )
+)
+```
+

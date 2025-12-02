@@ -1,0 +1,13 @@
+diff --git a/build/serializer/exportHermes.js b/build/serializer/exportHermes.js
+index 27fe57f0e8677a5f7a663d9dddf20a9556d82273..3a680b0394cfcc58f078356654038dbcd26771d3 100644
+--- a/build/serializer/exportHermes.js
++++ b/build/serializer/exportHermes.js
+@@ -19,7 +19,7 @@ function importHermesCommandFromProject(projectRoot) {
+     const hermescPaths = [
+         // Override hermesc dir by environment variables
+         process_1.default.env['REACT_NATIVE_OVERRIDE_HERMES_DIR']
+-            ? `${process_1.default.env['REACT_NATIVE_OVERRIDE_HERMES_DIR']}/build/bin/hermesc`
++            ? `${process_1.default.env['REACT_NATIVE_OVERRIDE_HERMES_DIR']}/${platformExecutable}`
+             : '',
+         // Building hermes from source
+         `${reactNativeRoot}/ReactAndroid/hermes-engine/build/hermes/bin/hermesc`,

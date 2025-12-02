@@ -1,0 +1,31 @@
+{
+  "$schema": "https://www.unpkg.com/wrangler/config-schema.json",
+  "name": "sync-agent-client",
+  "main": "index.ts",
+  "compatibility_date": "2025-09-25",
+  "compatibility_flags": ["nodejs_compat", "enable_request_signal"],
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "SYNC_AGENT_CLIENT_DURABLE_OBJECT",
+        "class_name": "SyncAgentClientDurableObject",
+      },
+    ],
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": ["SyncAgentClientDurableObject"],
+    },
+  ],
+  "services": [
+    {
+      "service": "storage-proxy",
+      "binding": "STORAGE_PROXY",
+    },
+    {
+      "service": "sync-server",
+      "binding": "SYNC_SERVER",
+    },
+  ],
+}

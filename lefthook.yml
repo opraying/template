@@ -1,0 +1,23 @@
+# EXAMPLE USAGE:
+#
+#   Refer for explanation to following link:
+#   https://github.com/evilmartians/lefthook/blob/master/docs/configuration.md
+#
+pre-push:
+  commands:
+    madge:
+      run: CI=true ./scripts/run-nx-affected.sh 'pnpm nx affected --target=madge'
+    typecheck:
+      run: CI=true ./scripts/run-nx-affected.sh 'pnpm nx affected --target=typecheck'
+
+pre-commit:
+  commands:
+    env-check:
+      glob: '*.env*'
+      run: pnpm dotenvx ext precommit
+    lint:
+      glob: '*.{js,ts,mjs,jsx,tsx,json,jsonc}'
+      run: pnpm oxlint
+    format:
+      glob: '*.{js,ts,mjs,jsx,tsx,json,jsonc}'
+      run: pnpm prettier --check --log-level warn {staged_files} && git update-index --again

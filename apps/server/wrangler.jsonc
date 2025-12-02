@@ -1,0 +1,153 @@
+{
+  "$schema": "https://www.unpkg.com/wrangler/config-schema.json",
+  "name": "template-server",
+  "compatibility_date": "2025-09-25",
+  "compatibility_flags": ["nodejs_compat", "enable_request_signal"],
+  "main": "index.ts",
+  "send_metrics": false,
+  "workers_dev": false,
+  "preview_urls": false,
+  "logpush": false,
+  "upload_source_maps": true,
+  "placement": {
+    "mode": "smart",
+  },
+  "observability": {
+    "enabled": true,
+  },
+  "rules": [
+    {
+      "globs": ["**/*.js"],
+      "type": "ESModule",
+    },
+  ],
+  "limits": {
+    "cpu_ms": 30,
+  },
+  "routes": [
+    {
+      "pattern": "template-web.opraying.com/internal*",
+      "zone_name": "opraying.com",
+    },
+    {
+      "pattern": "template-web.opraying.com/api*",
+      "zone_name": "opraying.com",
+    },
+    {
+      "pattern": "template-web.opraying.com/rpc*",
+      "zone_name": "opraying.com",
+    },
+  ],
+  "kv_namespaces": [
+    {
+      "binding": "CMS_KV",
+      "id": "edc484d0341a4bf793961ec90dfb370f",
+    },
+    {
+      "binding": "KV",
+      "id": "7e7ebba0cbec4109b7206211e7b12f84",
+    },
+  ],
+  "r2_buckets": [
+    {
+      "binding": "R2",
+      "bucket_name": "template-web-bucket",
+    },
+  ],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "template-web",
+      "database_id": "3117561d-4937-4399-b163-2be269a3aeb6",
+      "migrations_dir": "db/migrations",
+    },
+  ],
+  "services": [
+    {
+      "binding": "RATELIMITER",
+      "service": "infra-ratelimiter",
+    },
+    {
+      "binding": "PURCHASE",
+      "service": "infra-purchase",
+    },
+    {
+      "binding": "EMAILER",
+      "service": "infra-emailer",
+    },
+  ],
+  "analytics_engine_datasets": [
+    {
+      "binding": "TEMPLATE_EVENTS",
+      "dataset": "template-events",
+    },
+  ],
+  "ai": {
+    "binding": "TEMPLATE_AI",
+  },
+  "env": {
+    "test": {
+      "workers_dev": true,
+      "routes": [
+        {
+          "pattern": "test-template-web.opraying.com/internal*",
+          "zone_name": "opraying.com",
+        },
+        {
+          "pattern": "test-template-web.opraying.com/api*",
+          "zone_name": "opraying.com",
+        },
+        {
+          "pattern": "test-template-web.opraying.com/rpc*",
+          "zone_name": "opraying.com",
+        },
+      ],
+      "kv_namespaces": [
+        {
+          "binding": "CMS_KV",
+          "id": "edc484d0341a4bf793961ec90dfb370f",
+        },
+        {
+          "binding": "KV",
+          "id": "7e7ebba0cbec4109b7206211e7b12f84",
+        },
+      ],
+      "r2_buckets": [
+        {
+          "binding": "R2",
+          "bucket_name": "template-web-bucket",
+        },
+      ],
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "template-web",
+          "database_id": "3117561d-4937-4399-b163-2be269a3aeb6",
+        },
+      ],
+      "services": [
+        {
+          "binding": "RATELIMITER",
+          "service": "infra-ratelimiter-test",
+        },
+        {
+          "binding": "PURCHASE",
+          "service": "infra-purchase-test",
+        },
+        {
+          "binding": "EMAILER",
+          "service": "infra-emailer-test",
+        },
+      ],
+      "analytics_engine_datasets": [
+        {
+          "binding": "TEMPLATE_EVENTS",
+          "dataset": "template-events-test",
+        },
+      ],
+      "ai": {
+        "binding": "TEMPLATE_AI",
+      },
+    },
+  },
+}

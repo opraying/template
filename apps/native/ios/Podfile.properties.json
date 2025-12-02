@@ -1,0 +1,10 @@
+{
+  "ios.deploymentTarget": "15.1",
+  "apple.ccacheEnabled": "true",
+  "apple.privacyManifestAggregationEnabled": "true",
+  "expo.jsEngine": "hermes",
+  "newArchEnabled": "true",
+  "RCT_USE_PREBUILT_RNCORE": "true",
+  "EX_DEV_CLIENT_NETWORK_INSPECTOR": "true",
+  "ios.forceStaticLinking": "[]"
+}

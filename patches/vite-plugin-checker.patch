@@ -1,0 +1,310 @@
+diff --git a/dist/checkers/typescript/main.js b/dist/checkers/typescript/main.js
+index 1e0b7dbb7d6c5ddb86d1d93eecda4f8a7b54b90d..81cfba0d86ee9fae50be15765775b50232c443a0 100644
+--- a/dist/checkers/typescript/main.js
++++ b/dist/checkers/typescript/main.js
+@@ -1,3 +1,5 @@
++import { spawn } from "node:child_process";
++import { existsSync } from "node:fs";
+ import os from "node:os";
+ import path from "node:path";
+ import { fileURLToPath } from "node:url";
+@@ -15,10 +17,203 @@ import {
+   wrapCheckerSummary
+ } from "../../logger.js";
+ import {
+-  ACTION_TYPES
++  ACTION_TYPES,
++  DiagnosticLevel
+ } from "../../types.js";
+ const __filename = fileURLToPath(import.meta.url);
+ let createServeAndBuild;
++class TscDiagnosticCollector {
++  rootPath;
++  tsconfigPath;
++  typescriptPath;
++  buildMode;
++  onDiagnosticsCallback;
++  tscProcess;
++  constructor(rootPath, tsconfigPath = "tsconfig.json", typescriptPath = "typescript", buildMode = false) {
++    this.rootPath = rootPath;
++    this.tsconfigPath = tsconfigPath;
++    this.typescriptPath = typescriptPath;
++    this.buildMode = buildMode;
++  }
++  start(onDiagnostics) {
++    this.onDiagnosticsCallback = onDiagnostics;
++    this.runTypeCheck();
++  }
++  findTsgoExecutable() {
++    const isWindows = process.platform === "win32";
++    const executable = isWindows ? "tsgo.cmd" : "tsgo";
++    const searchDirs = [
++      // 1. Current project node_modules (highest priority)
++      this.rootPath,
++      // 2. Parent directory (workspace)
++      path.dirname(this.rootPath),
++      // 3. Two levels up (monorepo workspace root)
++      path.dirname(path.dirname(this.rootPath))
++    ];
++    for (const dir of searchDirs) {
++      const tsgoPath = path.join(dir, "node_modules", ".bin", executable);
++      if (existsSync(tsgoPath)) {
++        return { command: tsgoPath, args: [] };
++      }
++    }
++    if (this.typescriptPath !== "typescript") {
++      try {
++        const tsModule = require.resolve(this.typescriptPath);
++        const tsDir = path.dirname(path.dirname(tsModule));
++        const tsgoPath = path.join(tsDir, "node_modules", ".bin", executable);
++        if (existsSync(tsgoPath)) {
++          return { command: tsgoPath, args: [] };
++        }
++      } catch {
++      }
++    }
++    return { command: "npx", args: ["tsgo"] };
++  }
++  runTypeCheck() {
++    const configPath = path.join(this.rootPath, this.tsconfigPath);
++    let tscArgs;
++    if (this.buildMode) {
++      tscArgs = ["--build", configPath, "--watch", "--pretty", "false"];
++    } else {
++      tscArgs = [
++        "--noEmit",
++        "--project",
++        configPath,
++        "--watch",
++        "--pretty",
++        "false"
++      ];
++    }
++    const { command, args } = this.findTsgoExecutable();
++    const fullArgs = [...args, ...tscArgs];
++    this.tscProcess = spawn(command, fullArgs, {
++      cwd: this.rootPath,
++      stdio: ["pipe", "pipe", "pipe"]
++      // Explicitly handle stdin, stdout, stderr
++    });
++    let buffer = "";
++    let lastDiagnostics = [];
++    let isProcessing = false;
++    if (this.tscProcess.stdout) {
++      this.tscProcess.stdout.on("data", (data) => {
++        const chunk = data.toString();
++        if (chunk.includes("Starting compilation in watch mode") || chunk.includes(
++          "File change detected. Starting incremental compilation"
++        ) || // Build mode specific messages
++        chunk.includes("Projects in this build:") || chunk.includes("Starting incremental compilation") || chunk.includes("A non-dry build would update timestamps")) {
++          buffer = "";
++          isProcessing = false;
++          if (this.onDiagnosticsCallback) {
++            this.onDiagnosticsCallback([]);
++          }
++          return;
++        }
++        buffer += chunk;
++        let isCompletionChunk = false;
++        if (this.buildMode) {
++          isCompletionChunk = chunk.includes("Watching for file changes") || !!chunk.match(/Found \d+ errors?\./) || !!chunk.match(/Found \d+ errors? in/) || chunk.includes("build finished in") || chunk.includes("Found 0 errors") || chunk.includes("Projects up to date") || !!chunk.match(/Project '.+' is up to date/);
++        } else {
++          isCompletionChunk = chunk.includes("Watching for file changes") || !!chunk.match(/Found \d+ errors?\./) || !!chunk.match(/Found \d+ errors? in/) || chunk.includes("build finished in");
++        }
++        if (isCompletionChunk && !isProcessing) {
++          isProcessing = true;
++          const diagnostics = this.parseTscOutput(buffer);
++          const diagnosticsChanged = this.diagnosticsChanged(
++            lastDiagnostics,
++            diagnostics
++          );
++          const shouldUpdate = lastDiagnostics.length === 0 || diagnosticsChanged;
++          if (shouldUpdate) {
++            lastDiagnostics = [...diagnostics];
++            if (this.onDiagnosticsCallback) {
++              this.onDiagnosticsCallback(diagnostics);
++            }
++          }
++          buffer = "";
++          setTimeout(() => {
++            isProcessing = false;
++          }, 50);
++        }
++      });
++    }
++    if (this.tscProcess.stderr) {
++      this.tscProcess.stderr.on("data", (data) => {
++        const stderr = data.toString();
++        if (stderr.trim()) {
++          console.warn("[tsc] stderr:", colors.red(stderr));
++        }
++      });
++    }
++    this.tscProcess.on("error", (error) => {
++      console.error("[tsc] Process error:", colors.red(error.message));
++      if (this.onDiagnosticsCallback) {
++        this.onDiagnosticsCallback([]);
++      }
++    });
++  }
++  diagnosticsChanged(old, current) {
++    if (old.length !== current.length) return true;
++    if (old.length === 0 && current.length === 0) return false;
++    const oldKeys = old.map((d) => {
++      var _a, _b, _c;
++      return `${(_a = d.loc) == null ? void 0 : _a.file}:${(_b = d.loc) == null ? void 0 : _b.line}:${(_c = d.loc) == null ? void 0 : _c.column}:${d.message}`;
++    }).sort();
++    const currentKeys = current.map((d) => {
++      var _a, _b, _c;
++      return `${(_a = d.loc) == null ? void 0 : _a.file}:${(_b = d.loc) == null ? void 0 : _b.line}:${(_c = d.loc) == null ? void 0 : _c.column}:${d.message}`;
++    }).sort();
++    return oldKeys.join("|") !== currentKeys.join("|");
++  }
++  parseTscOutput(output) {
++    const diagnostics = [];
++    const seen = /* @__PURE__ */ new Set();
++    if (!output.trim()) {
++      return diagnostics;
++    }
++    const diagnosticPattern = /^(.+?)\((\d+),(\d+)\):\s*(error|warning)\s+TS(\d+):\s*(.+)$/gm;
++    const alternativePattern = /^([^:]+):\s*\((\d+),(\d+)\):\s*(error|warning)\s+TS(\d+):\s*(.+)$/gm;
++    const patterns = [diagnosticPattern, alternativePattern];
++    for (const pattern of patterns) {
++      pattern.lastIndex = 0;
++      let match;
++      while ((match = pattern.exec(output)) !== null) {
++        const [, filePath, lineStr, columnStr, severity, errorCode, message] = match;
++        if (!filePath || !lineStr || !columnStr || !message || !errorCode) {
++          continue;
++        }
++        const line = Number.parseInt(lineStr, 10);
++        const column = Number.parseInt(columnStr, 10);
++        const absolutePath = path.isAbsolute(filePath) ? filePath : path.resolve(this.rootPath, filePath);
++        const diagnosticKey = `${absolutePath}:${line}:${column}:${errorCode}`;
++        if (seen.has(diagnosticKey)) {
++          continue;
++        }
++        seen.add(diagnosticKey);
++        const diagnostic = {
++          id: `${line}:${column}`,
++          message: `TS${errorCode}: ${message.trim()}`,
++          stack: "",
++          loc: {
++            file: absolutePath,
++            line,
++            column
++          },
++          frame: "",
++          checkerId: "typescript",
++          level: severity === "error" ? DiagnosticLevel.Error : DiagnosticLevel.Warning
++        };
++        diagnostics.push(diagnostic);
++      }
++    }
++    return diagnostics;
++  }
++  stop() {
++    if (this.tscProcess) {
++      this.tscProcess.kill("SIGTERM");
++      this.tscProcess = void 0;
++    }
++  }
++}
+ const createDiagnostic = (pluginConfig) => {
+   let overlay = true;
+   let terminal = true;
+@@ -33,24 +228,69 @@ const createDiagnostic = (pluginConfig) => {
+       const finalConfig = pluginConfig.typescript === true ? {
+         root,
+         tsconfigPath: "tsconfig.json",
+-        typescriptPath: "typescript"
++        typescriptPath: "typescript",
++        useNative: false,
++        buildMode: false
+       } : {
+         root: pluginConfig.typescript.root ?? root,
+         tsconfigPath: pluginConfig.typescript.tsconfigPath ?? "tsconfig.json",
+-        typescriptPath: pluginConfig.typescript.typescriptPath ?? "typescript"
++        typescriptPath: pluginConfig.typescript.typescriptPath ?? "typescript",
++        useNative: pluginConfig.typescript.useNative ?? false,
++        buildMode: pluginConfig.typescript.buildMode ?? false
+       };
+       let configFile;
++      if (finalConfig.useNative) {
++        const ts2 = await import(finalConfig.typescriptPath).then((r) => r.default || r);
++        const foundConfigFile2 = ts2.findConfigFile(
++          finalConfig.root,
++          ts2.sys.fileExists,
++          finalConfig.tsconfigPath
++        );
++        if (foundConfigFile2 === void 0) {
++          throw Error(
++            `Failed to find a valid tsconfig.json: ${finalConfig.tsconfigPath} at ${finalConfig.root} is not a valid tsconfig`
++          );
++        }
++        configFile = foundConfigFile2;
++        const tscClient = new TscDiagnosticCollector(
++          finalConfig.root,
++          finalConfig.tsconfigPath,
++          finalConfig.typescriptPath,
++          finalConfig.buildMode || false
++        );
++        tscClient.start((diagnostics) => {
++          var _a;
++          currDiagnostics = diagnostics;
++          if (overlay) {
++            (_a = parentPort) == null ? void 0 : _a.postMessage({
++              type: ACTION_TYPES.overlayError,
++              payload: toClientPayload("typescript", diagnostics)
++            });
++          }
++          if (terminal) {
++            const errorCount = diagnostics.length;
++            const color = errorCount > 0 ? "red" : "green";
++            const message = errorCount > 0 ? `Found ${errorCount} error${errorCount === 1 ? "" : "s"} in TypeScript files` : "No TypeScript errors found";
++            consoleLog(
++              colors[color](wrapCheckerSummary("TypeScript (tsgo)", message)),
++              errorCount > 0 ? "error" : "info"
++            );
++          }
++        });
++        return;
++      }
+       const ts = await import(finalConfig.typescriptPath).then((r) => r.default || r);
+-      configFile = ts.findConfigFile(
++      const foundConfigFile = ts.findConfigFile(
+         finalConfig.root,
+         ts.sys.fileExists,
+         finalConfig.tsconfigPath
+       );
+-      if (configFile === void 0) {
++      if (foundConfigFile === void 0) {
+         throw Error(
+           `Failed to find a valid tsconfig.json: ${finalConfig.tsconfigPath} at ${finalConfig.root} is not a valid tsconfig`
+         );
+       }
++      configFile = foundConfigFile;
+       let logChunk = "";
+       const reportDiagnostic = (diagnostic) => {
+         const normalizedDiagnostic = normalizeTsDiagnostic(diagnostic);
+@@ -132,8 +372,10 @@ class TscChecker extends Checker {
+             const {
+               root = "",
+               tsconfigPath = "",
+-              buildMode
++              buildMode,
++              useNative = false
+             } = config.typescript;
++            const compiler = useNative ? "tsgo" : "tsc";
+             const args = [buildMode ? "-b" : "--noEmit"];
+             let projectPath = "";
+             if (root || tsconfigPath) {
+@@ -146,7 +388,7 @@ class TscChecker extends Checker {
+                 args.push("-p", projectPath);
+               }
+             }
+-            return ["tsc", args];
++            return [compiler, args];
+           }
+           return ["tsc", ["--noEmit"]];
+         }

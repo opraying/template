@@ -1,0 +1,29 @@
+{
+  "name": "pkgs-otel",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/otel/src",
+  "projectType": "library",
+  "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/node_modules/.vitest/packages/otel", "{workspaceRoot}/coverage/packages/otel"],
+      "options": {
+        "command": "pnpm xdev test --project pkgs-otel"
+      }
+    },
+    "madge": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "madge --ts-config ./tsconfig.lib.json --circular --no-color --no-spinner --extensions ts,tsx ./src",
+        "cwd": "packages/otel"
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsgo -p packages/otel/tsconfig.check.json"
+      }
+    }
+  },
+  "tags": []
+}

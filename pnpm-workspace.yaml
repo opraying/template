@@ -1,0 +1,129 @@
+packages:
+  - packages/*
+  - infra/*
+  - template/*
+  - verx/*
+  - opraying/*
+  - playground/*
+
+ignorePatchFailures: true
+
+ignoredBuiltDependencies:
+  - '@prisma/engines'
+  - detox
+  - dtrace-provider
+  - msgpackr-extract
+  - styled-components
+  - unrs-resolver
+
+onlyBuiltDependencies:
+  - '@discordjs/opus'
+  - '@parcel/watcher'
+  - '@swc/core'
+  - better-sqlite3
+  - core-js-pure
+  - esbuild
+  - lefthook
+  - nx
+  - prisma
+  - react-native-nitro-modules
+  - sharp
+  - workerd
+
+overrides:
+  '@oslojs/encoding': ^1.1.0
+  abab: npm:@nolyfill/abab@^1
+  array-flatten: npm:@nolyfill/array-flatten@^1
+  array-includes: npm:@nolyfill/array-includes@^1
+  array.prototype.findlast: npm:@nolyfill/array.prototype.findlast@^1
+  array.prototype.findlastindex: npm:@nolyfill/array.prototype.findlastindex@^1
+  array.prototype.flat: npm:@nolyfill/array.prototype.flat@^1
+  array.prototype.flatmap: npm:@nolyfill/array.prototype.flatmap@^1
+  array.prototype.tosorted: npm:@nolyfill/array.prototype.tosorted@^1
+  clsx: 2.1.1
+  cookie: 1.1.1
+  deep-equal: npm:@nolyfill/deep-equal@^1
+  effect: 3.19.6
+  es-iterator-helpers: npm:@nolyfill/es-iterator-helpers@^1
+  es-set-tostringtag: npm:@nolyfill/es-set-tostringtag@^1
+  esbuild: 0.27.0
+  function-bind: npm:@nolyfill/function-bind@^1
+  harmony-reflect: npm:@nolyfill/harmony-reflect@^1
+  has: npm:@nolyfill/has@^1
+  hasown: npm:@nolyfill/hasown@^1
+  is-arguments: npm:@nolyfill/is-arguments@^1
+  is-core-module: npm:@nolyfill/is-core-module@^1
+  is-generator-function: npm:@nolyfill/is-generator-function@^1
+  is-typed-array: npm:@nolyfill/is-typed-array@^1
+  isarray: npm:@nolyfill/isarray@^1
+  object.assign: npm:@nolyfill/object.assign@^1
+  object.entries: npm:@nolyfill/object.entries@^1
+  object.fromentries: npm:@nolyfill/object.fromentries@^1
+  object.groupby: npm:@nolyfill/object.groupby@
+  object.hasown: npm:@nolyfill/object.hasown@^1
+  object.values: npm:@nolyfill/object.values@^1
+  react: 19.2.0
+  react-dom: 19.2.0
+  react-is: 19.2.0
+  react-native: 0.83.0-rc.3
+  safe-buffer: npm:@nolyfill/safe-buffer@^1
+  safer-buffer: npm:@nolyfill/safer-buffer@^1
+  scheduler: 0.27.0
+  side-channel: npm:@nolyfill/side-channel@^1
+  string.prototype.matchall: npm:@nolyfill/string.prototype.matchall@^1
+  string.prototype.repeat: npm:@nolyfill/string.prototype.repeat@^1
+  string.prototype.trimend: npm:@nolyfill/string.prototype.trimend@^1
+  tailwindcss: 3.4.17
+  turbo-stream: 2.4.1
+  typed-array-buffer: npm:@nolyfill/typed-array-buffer@^1
+  typedarray: npm:@nolyfill/typedarray@^1
+  vite: npm:rolldown-vite@latest
+  which-typed-array: npm:@nolyfill/which-typed-array@^1
+
+patchedDependencies:
+  '@babel/plugin-transform-react-jsx': patches/@babel__plugin-transform-react-jsx.patch
+  '@expo/build-tools': patches/@expo__build-tools.patch
+  '@expo/cli': patches/@expo__cli.patch
+  '@expo/metro-config': patches/@expo__metro-config.patch
+  '@nx/expo': patches/@nx__expo.patch
+  '@paddle/paddle-js': patches/@paddle__paddle-js.patch
+  eas-cli-local-build-plugin: patches/eas-cli-local-build-plugin.patch
+  expo-modules-core: patches/expo-modules-core.patch
+  kysely: patches/kysely.patch
+  react-dev-inspector: patches/react-dev-inspector.patch
+  react-dom: patches/react-dom.patch
+  react-image-previewer@1.1.6: patches/react-image-previewer@1.1.6.patch
+  rolldown-vite: patches/rolldown-vite.patch
+  unicorn-magic@0.3.0: patches/unicorn-magic@0.3.0.patch
+  vite-plugin-checker: patches/vite-plugin-checker.patch
+  workbox-precaching: patches/workbox-precaching.patch
+
+peerDependencyRules:
+  allowAny:
+    - react
+    - react-dom
+    - react-is
+    - scheduler
+    - '@types/react'
+    - '@types/react-dom'
+    - vite
+    - vitest
+    - rollup
+    - typescript
+    - effect
+    - '@glideapps/glide-data-grid'
+
+publicHoistPattern:
+  - babel-*
+  - '@babel/*'
+  - expo
+  - expo-*
+  - '@expo/*'
+  - hermes-compiler
+  - react-native*
+  - '@react-native*'
+  - '@react-navigation*'
+  - '@rnx-kit/*'
+  - '@iconify-json/*'
+  - '@electron/*'
+  - '@electron-*'

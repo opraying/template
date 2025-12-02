@@ -1,0 +1,44 @@
+{
+  "name": "template-cms",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/cms",
+  "projectType": "application",
+  "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/node_modules/.vitest/apps/cms", "{workspaceRoot}/coverage/apps/cms"],
+      "options": {
+        "command": "pnpm xdev test --project template-cms"
+      }
+    },
+    "dev": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "apps/cms",
+        "command": "dotenvx run -q -f ../server/.env -- sanity dev"
+      }
+    },
+    "start": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "apps/cms",
+        "command": "dotenvx run -q -f ../server/.env -- sanity start"
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{projectRoot}/dist"],
+      "options": {
+        "command": "dotenvx run -q -f ../server/.env -- sanity build",
+        "cwd": "apps/cms"
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsgo -p apps/cms/tsconfig.check.json"
+      }
+    }
+  },
+  "tags": []
+}

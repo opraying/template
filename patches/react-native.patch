@@ -1,0 +1,54 @@
+diff --git a/Libraries/Renderer/implementations/ReactNativeRenderer-dev.js b/Libraries/Renderer/implementations/ReactNativeRenderer-dev.js
+index 9d663610a0546d4f801196217966ad9d184818af..64d095ea7500ccb94c89454000cf8c94f82f84d8 100644
+--- a/Libraries/Renderer/implementations/ReactNativeRenderer-dev.js
++++ b/Libraries/Renderer/implementations/ReactNativeRenderer-dev.js
+@@ -16867,13 +16867,6 @@ __DEV__ &&
+     setSuspenseHandler = function (newShouldSuspendImpl) {
+       shouldSuspendImpl = newShouldSuspendImpl;
+     };
+-    var isomorphicReactPackageVersion = React.version;
+-    if ("19.1.0" !== isomorphicReactPackageVersion)
+-      throw Error(
+-        'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
+-          (isomorphicReactPackageVersion +
+-            "\n  - react-native-renderer:  19.1.0\nLearn more: https://react.dev/warnings/version-mismatch")
+-      );
+     if (
+       "function" !==
+       typeof ReactNativePrivateInterface.ReactFiberErrorDialog.showErrorDialog
+diff --git a/Libraries/Renderer/implementations/ReactNativeRenderer-prod.js b/Libraries/Renderer/implementations/ReactNativeRenderer-prod.js
+index b3d1cfa09d76b50617b9032b15c82351a699638e..993dc74dd2578ebe5918518c10fe436d0298c6b5 100644
+--- a/Libraries/Renderer/implementations/ReactNativeRenderer-prod.js
++++ b/Libraries/Renderer/implementations/ReactNativeRenderer-prod.js
+@@ -10602,13 +10602,6 @@ function updateContainer(element, container, parentComponent, callback) {
+     entangleTransitions(element, parentComponent, lane));
+   return lane;
+ }
+-var isomorphicReactPackageVersion = React.version;
+-if ("19.1.0" !== isomorphicReactPackageVersion)
+-  throw Error(
+-    'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
+-      (isomorphicReactPackageVersion +
+-        "\n  - react-native-renderer:  19.1.0\nLearn more: https://react.dev/warnings/version-mismatch")
+-  );
+ if (
+   "function" !==
+   typeof ReactNativePrivateInterface.ReactFiberErrorDialog.showErrorDialog
+diff --git a/Libraries/Renderer/implementations/ReactNativeRenderer-profiling.js b/Libraries/Renderer/implementations/ReactNativeRenderer-profiling.js
+index b317ca102b0b7d25c15819c61352019fef05561b..2103a69cd8fedee4adc8a3ce48f9ad1235c5551a 100644
+--- a/Libraries/Renderer/implementations/ReactNativeRenderer-profiling.js
++++ b/Libraries/Renderer/implementations/ReactNativeRenderer-profiling.js
+@@ -11244,13 +11244,6 @@ function updateContainer(element, container, parentComponent, callback) {
+     entangleTransitions(element, parentComponent, lane));
+   return lane;
+ }
+-var isomorphicReactPackageVersion = React.version;
+-if ("19.1.0" !== isomorphicReactPackageVersion)
+-  throw Error(
+-    'Incompatible React versions: The "react" and "react-native-renderer" packages must have the exact same version. Instead got:\n  - react:                  ' +
+-      (isomorphicReactPackageVersion +
+-        "\n  - react-native-renderer:  19.1.0\nLearn more: https://react.dev/warnings/version-mismatch")
+-  );
+ if (
+   "function" !==
+   typeof ReactNativePrivateInterface.ReactFiberErrorDialog.showErrorDialog

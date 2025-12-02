@@ -1,0 +1,39 @@
+diff --git a/lib/create-plugin.js b/lib/create-plugin.js
+index 84306587b8d93e6a82f2e2b8241d3db74eb5e883..49df44b7e9cddf9e7f29cd55ea3ac6a25575446d 100644
+--- a/lib/create-plugin.js
++++ b/lib/create-plugin.js
+@@ -326,6 +326,34 @@ You can set \`throwIfNamespace: false\` to bypass this warning.`);
+         args.push((_extracted$key = extracted.key) != null ? _extracted$key : path.scope.buildUndefinedNode(), _core.types.booleanLiteral(children.length > 1));
+         if (extracted.__source) {
+           args.push(extracted.__source);
++          const sourceProperties = extracted.__source.properties;
++          const filename = sourceProperties.find(prop => _core.types.isObjectProperty(prop) && _core.types.isIdentifier(prop.key, {
++            name: "fileName"
++          }));
++          const line = sourceProperties.find(prop => _core.types.isObjectProperty(prop) && _core.types.isIdentifier(prop.key, {
++            name: "lineNumber"
++          }));
++          const column = sourceProperties.find(prop => _core.types.isObjectProperty(prop) && _core.types.isIdentifier(prop.key, {
++            name: "columnNumber"
++          }));
++          attribs.properties.push({
++            type: "ObjectProperty",
++            key: {
++              type: "Identifier",
++              name: "__source",
++              loc: undefined
++            },
++            value:  {
++              type: "ObjectExpression",
++              properties: [
++                filename ? _core.types.inherits(_core.types.objectProperty(_core.types.identifier("fileName"), filename.value), filename) : _core.types.objectProperty(_core.types.identifier("fileName"), path.scope.buildUndefinedNode()),
++                line ? _core.types.inherits(_core.types.objectProperty(_core.types.identifier("lineNumber"), line.value), line) : _core.types.objectProperty(_core.types.identifier("lineNumber"), path.scope.buildUndefinedNode()),
++                column ? _core.types.inherits(_core.types.objectProperty(_core.types.identifier("columnNumber"), column.value), column) : _core.types.objectProperty(_core.types.identifier("columnNumber"), path.scope.buildUndefinedNode())
++              ],
++              loc: undefined
++            },
++            loc: undefined,
++          });
+           if (extracted.__self) args.push(extracted.__self);
+         } else if (extracted.__self) {
+           args.push(path.scope.buildUndefinedNode(), extracted.__self);

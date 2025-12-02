@@ -1,0 +1,21 @@
+{
+  "include": [
+    "/sitemap.xml",
+    "/rss.xml",
+    "/404",
+    "/home",
+    "/contract",
+    "/about",
+    "/changelog",
+    "/pricing",
+    "/changelog",
+    "/privacy",
+    "/terms",
+    "/test/*",
+    "/example/*",
+    "/login/*",
+    "/settings/*",
+    "/"
+  ],
+  "exclude": []
+}

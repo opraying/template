@@ -1,0 +1,13 @@
+diff --git a/dist/build.js b/dist/build.js
+index 0ce914946459052f49bfbc9a2ea708992bcf3c1c..f83afddac1eb5f6f65280dfd580d71094f14ebbc 100644
+--- a/dist/build.js
++++ b/dist/build.js
+@@ -35,7 +35,7 @@ async function buildAsync(job, metadata) {
+             EAS_BUILD: '1',
+             EAS_BUILD_RUNNER: 'local-build-plugin',
+             EAS_BUILD_PLATFORM: job.platform,
+-            EAS_BUILD_WORKINGDIR: path_1.default.join(workingdir, 'build'),
++            EAS_BUILD_WORKINGDIR: process.env.EXPO_FIXED_BUILD_WORKDIR ?? path_1.default.join(workingdir, 'build'),
+             EAS_BUILD_PROFILE: metadata.buildProfile,
+             EAS_BUILD_GIT_COMMIT_HASH: metadata.gitCommitHash,
+             EAS_BUILD_USERNAME: username,

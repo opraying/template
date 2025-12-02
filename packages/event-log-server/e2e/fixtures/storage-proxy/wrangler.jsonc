@@ -1,0 +1,21 @@
+{
+  "$schema": "https://www.unpkg.com/wrangler/config-schema.json",
+  "name": "storage-proxy",
+  "main": "index.ts",
+  "compatibility_date": "2025-09-25",
+  "compatibility_flags": ["nodejs_compat", "enable_request_signal"],
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "STORAGE_PROXY_DURABLE_OBJECT",
+        "class_name": "SyncStorageProxyDurableObject",
+      },
+    ],
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": ["SyncStorageProxyDurableObject"],
+    },
+  ],
+}

@@ -1,0 +1,149 @@
+{
+  "$schema": "https://www.unpkg.com/wrangler/config-schema.json",
+  "name": "template-web",
+  "compatibility_date": "2025-09-25",
+  "compatibility_flags": ["nodejs_compat", "enable_request_signal"],
+  "main": "index.ts",
+  "send_metrics": false,
+  "workers_dev": false,
+  "preview_urls": false,
+  "logpush": false,
+  "upload_source_maps": true,
+  "routes": [
+    {
+      "pattern": "template-web.opraying.com",
+      "custom_domain": true,
+    },
+  ],
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS",
+    "html_handling": "none",
+  },
+  "placement": {
+    "mode": "smart",
+  },
+  "observability": {
+    "enabled": true,
+  },
+  "rules": [
+    {
+      "globs": ["workers/**/*.js"],
+      "type": "ESModule",
+    },
+  ],
+  "limits": {
+    "cpu_ms": 30,
+  },
+  "kv_namespaces": [
+    {
+      "binding": "CMS_KV",
+      "id": "edc484d0341a4bf793961ec90dfb370f",
+    },
+    {
+      "binding": "KV",
+      "id": "7e7ebba0cbec4109b7206211e7b12f84",
+    },
+  ],
+  "r2_buckets": [
+    {
+      "binding": "R2",
+      "bucket_name": "template-app",
+    },
+  ],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "template-web",
+      "database_id": "3117561d-4937-4399-b163-2be269a3aeb6",
+    },
+  ],
+  "services": [
+    {
+      "binding": "RATELIMITER",
+      "service": "infra-ratelimiter",
+    },
+    {
+      "binding": "EMAILER",
+      "service": "infra-emailer",
+    },
+    {
+      "binding": "PURCHASE",
+      "service": "infra-purchase",
+    },
+    {
+      "binding": "SERVER",
+      "service": "template-server",
+    },
+  ],
+  "analytics_engine_datasets": [
+    {
+      "binding": "TEMPLATE_EVENTS",
+      "dataset": "template-events",
+    },
+  ],
+  "ai": {
+    "binding": "TEMPLATE_AI",
+  },
+  "env": {
+    "test": {
+      "workers_dev": true,
+      "routes": [
+        {
+          "pattern": "template-web-test.opraying.com/*",
+          "zone_name": "opraying.com",
+        },
+      ],
+      "kv_namespaces": [
+        {
+          "binding": "CMS_KV",
+          "id": "edc484d0341a4bf793961ec90dfb370f",
+        },
+        {
+          "binding": "KV",
+          "id": "7e7ebba0cbec4109b7206211e7b12f84",
+        },
+      ],
+      "r2_buckets": [
+        {
+          "binding": "R2",
+          "bucket_name": "template-app",
+        },
+      ],
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "template-web",
+          "database_id": "3117561d-4937-4399-b163-2be269a3aeb6",
+        },
+      ],
+      "services": [
+        {
+          "binding": "RATELIMITER",
+          "service": "infra-ratelimiter-test",
+        },
+        {
+          "binding": "EMAILER",
+          "service": "infra-emailer-test",
+        },
+        {
+          "binding": "PURCHASE",
+          "service": "infra-purchase-test",
+        },
+        {
+          "binding": "SERVER",
+          "service": "template-server-test",
+        },
+      ],
+      "analytics_engine_datasets": [
+        {
+          "binding": "TEMPLATE_EVENTS",
+          "dataset": "template-events-test",
+        },
+      ],
+      "ai": {
+        "binding": "TEMPLATE_AI",
+      },
+    },
+  },
+}

@@ -1,0 +1,308 @@
+/* Enhanced iOS-style tabbar animations and effects */
+
+/* Safe area support for various positions */
+@supports (padding: env(safe-area-inset-bottom)) {
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .pt-safe {
+    padding-top: env(safe-area-inset-top);
+  }
+  .pl-safe {
+    padding-left: env(safe-area-inset-left);
+  }
+  .pr-safe {
+    padding-right: env(safe-area-inset-right);
+  }
+}
+
+/* Root tabbar container */
+.tabbar-container {
+  --tabbar-duration: 200ms;
+  --tabbar-easing: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --tabbar-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  --tabbar-active-color: #3b82f6;
+  --tabbar-inactive-color: #6b7280;
+  --tabbar-bg: rgba(255, 255, 255, 0.8);
+  --tabbar-bg-dark: rgba(17, 24, 39, 0.8);
+  --tabbar-border: rgba(229, 231, 235, 0.5);
+  --tabbar-border-dark: rgba(75, 85, 99, 0.5);
+  --tabbar-shadow: 0 -1px 3px 0 rgba(0, 0, 0, 0.1), 0 -1px 2px 0 rgba(0, 0, 0, 0.06);
+  --tabbar-shadow-dark: 0 -1px 3px 0 rgba(0, 0, 0, 0.3), 0 -1px 2px 0 rgba(0, 0, 0, 0.2);
+}
+
+/* Enhanced spring animation for tab press */
+@keyframes tabPress {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(0.92);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes tabPressSpring {
+  0% {
+    transform: scale(1);
+  }
+  30% {
+    transform: scale(0.88);
+  }
+  60% {
+    transform: scale(1.02);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.tab-press {
+  animation: tabPress 0.15s var(--tabbar-easing);
+}
+
+.tab-press-spring {
+  animation: tabPressSpring 0.3s var(--tabbar-spring);
+}
+
+/* Enhanced badge animations */
+@keyframes badgeAppear {
+  0% {
+    transform: scale(0) rotate(-12deg);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.15) rotate(-6deg);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+@keyframes badgePulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes badgeDisappear {
+  0% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0) rotate(12deg);
+    opacity: 0;
+  }
+}
+
+.badge-appear {
+  animation: badgeAppear 0.3s var(--tabbar-spring);
+}
+
+.badge-pulse {
+  animation: badgePulse 0.6s ease-in-out;
+}
+
+.badge-disappear {
+  animation: badgeDisappear 0.2s var(--tabbar-easing);
+}
+
+/* Ripple effect */
+@keyframes ripple {
+  0% {
+    transform: scale(0);
+    opacity: 0.6;
+  }
+  100% {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+.tab-ripple {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  animation: ripple 0.6s linear;
+}
+
+/* Icon transition effects */
+@keyframes iconSwap {
+  0% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(0.8) rotate(-5deg);
+    opacity: 0.3;
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+.icon-swap {
+  animation: iconSwap 0.25s var(--tabbar-easing);
+}
+
+/* Focus ring enhancement */
+.tab-focus-ring {
+  position: absolute;
+  inset: -2px;
+  border: 2px solid var(--tabbar-active-color);
+  border-radius: 12px;
+  opacity: 0;
+  transition: opacity var(--tabbar-duration) var(--tabbar-easing);
+}
+
+.tab-focus-ring.visible {
+  opacity: 1;
+}
+
+/* Hover effects */
+@media (hover: hover) {
+  .tab-item:hover .tab-icon {
+    transform: translateY(-1px);
+  }
+
+  .tab-item:hover .tab-label {
+    opacity: 0.8;
+  }
+}
+
+/* Active state indicator */
+@keyframes activeIndicator {
+  0% {
+    transform: scaleX(0);
+    opacity: 0;
+  }
+  100% {
+    transform: scaleX(1);
+    opacity: 1;
+  }
+}
+
+.active-indicator {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%) scaleX(0);
+  width: 24px;
+  height: 2px;
+  background: var(--tabbar-active-color);
+  border-radius: 1px;
+  animation: activeIndicator 0.25s var(--tabbar-easing) forwards;
+}
+
+/* Floating variant styles */
+.tabbar-floating {
+  box-shadow: var(--tabbar-shadow);
+  border: 1px solid var(--tabbar-border);
+}
+
+@media (prefers-color-scheme: dark) {
+  .tabbar-floating {
+    box-shadow: var(--tabbar-shadow-dark);
+    border-color: var(--tabbar-border-dark);
+  }
+}
+
+/* Minimal variant styles */
+.tabbar-minimal {
+  background: transparent !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border: none !important;
+}
+
+/* Compact mode adjustments */
+.tabbar-compact .tab-item {
+  min-width: 36px;
+  min-height: 36px;
+  padding: 4px;
+}
+
+.tabbar-compact .tab-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.tabbar-compact .tab-label {
+  font-size: 8px;
+  margin-top: 2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .tabbar-container {
+    --tabbar-active-color: #0066cc;
+    --tabbar-inactive-color: #333333;
+    --tabbar-border: #666666;
+  }
+
+  .tab-item {
+    border: 1px solid transparent;
+  }
+
+  .tab-item[aria-selected='true'] {
+    border-color: var(--tabbar-active-color);
+    background: rgba(0, 102, 204, 0.1);
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .tabbar-container {
+    --tabbar-duration: 0ms;
+  }
+
+  .tab-press,
+  .tab-press-spring,
+  .badge-appear,
+  .badge-pulse,
+  .badge-disappear,
+  .icon-swap,
+  .active-indicator {
+    animation: none;
+  }
+
+  .tab-ripple {
+    display: none;
+  }
+}
+
+/* Print styles */
+@media print {
+  .tabbar-container {
+    display: none;
+  }
+}
+
+/* RTL support */
+[dir='rtl'] .badge {
+  left: -4px;
+  right: auto;
+}
+
+[dir='rtl'] .active-indicator {
+  transform: translateX(50%) scaleX(1);
+}
+
+/* Large text support */
+@media (min-resolution: 2dppx) {
+  .tab-label {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}

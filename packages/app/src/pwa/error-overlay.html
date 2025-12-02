@@ -1,0 +1,543 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Error - Application Issue</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans',
+          'Droid Sans', 'Helvetica Neue', sans-serif;
+        background-color: #fafafa;
+        color: #1a1a1a;
+        line-height: 1.5;
+      }
+
+      .error-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(0, 0, 0, 0.4);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 16px;
+        z-index: 9999;
+      }
+
+      .error-container {
+        background: white;
+        border-radius: 12px;
+        box-shadow:
+          0 20px 25px -5px rgba(0, 0, 0, 0.1),
+          0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        max-width: 600px;
+        width: 100%;
+        max-height: 90vh;
+        overflow-y: auto;
+      }
+
+      .error-header {
+        padding: 24px;
+        border-bottom: 1px solid #e5e7eb;
+      }
+
+      .error-title {
+        font-size: 20px;
+        font-weight: 600;
+        color: #111827;
+        margin-bottom: 8px;
+      }
+
+      .error-subtitle {
+        font-size: 14px;
+        color: #6b7280;
+      }
+
+      .error-content {
+        padding: 24px;
+      }
+
+      .error-message {
+        background-color: #fef2f2;
+        border-left: 4px solid #f87171;
+        border: 1px solid #fecaca;
+        border-radius: 8px;
+        padding: 16px;
+        margin-bottom: 24px;
+      }
+
+      .error-message-content {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+      }
+
+      .error-icon {
+        flex-shrink: 0;
+        width: 32px;
+        height: 32px;
+        background-color: #ef4444;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .error-icon svg {
+        width: 16px;
+        height: 16px;
+        color: white;
+      }
+
+      .error-text h3 {
+        font-size: 16px;
+        font-weight: 600;
+        color: #7f1d1d;
+        margin-bottom: 4px;
+      }
+
+      .error-text p {
+        font-size: 14px;
+        color: #991b1b;
+        font-weight: 500;
+        word-break: break-all;
+      }
+
+      .recovery-section {
+        background-color: #f0fdf4;
+        border: 1px solid #bbf7d0;
+        border-radius: 8px;
+        padding: 16px;
+        margin-bottom: 24px;
+      }
+
+      .recovery-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 12px;
+      }
+
+      .recovery-icon {
+        width: 32px;
+        height: 32px;
+        background-color: #22c55e;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .recovery-icon svg {
+        width: 16px;
+        height: 16px;
+        color: white;
+      }
+
+      .recovery-title {
+        font-size: 14px;
+        font-weight: 600;
+        color: #14532d;
+      }
+
+      .recovery-subtitle {
+        font-size: 12px;
+        color: #166534;
+      }
+
+      .recovery-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 16px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+        border: none;
+        text-decoration: none;
+      }
+
+      .btn-primary {
+        background-color: #22c55e;
+        color: white;
+      }
+
+      .btn-primary:hover {
+        background-color: #16a34a;
+      }
+
+      .btn-secondary {
+        background-color: white;
+        color: #15803d;
+        border: 1px solid #bbf7d0;
+      }
+
+      .btn-secondary:hover {
+        background-color: #f0fdf4;
+      }
+
+      .btn svg {
+        width: 16px;
+        height: 16px;
+      }
+
+      .debug-section {
+        margin-top: 24px;
+        padding-top: 24px;
+        border-top: 1px solid #e5e7eb;
+      }
+
+      .debug-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        cursor: pointer;
+        padding: 8px 0;
+      }
+
+      .debug-toggle h4 {
+        font-size: 14px;
+        font-weight: 600;
+        color: #111827;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .debug-toggle svg {
+        width: 16px;
+        height: 16px;
+        color: #6b7280;
+        transition: transform 0.2s;
+      }
+
+      .debug-toggle[aria-expanded='true'] svg {
+        transform: rotate(90deg);
+      }
+
+      .debug-content {
+        margin-top: 12px;
+        display: none;
+      }
+
+      .debug-content.active {
+        display: block;
+      }
+
+      .debug-section-item {
+        margin-bottom: 16px;
+      }
+
+      .debug-section-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 8px;
+      }
+
+      .debug-section-label {
+        font-size: 12px;
+        font-weight: 500;
+        color: #4b5563;
+      }
+
+      .copy-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 4px 8px;
+        font-size: 12px;
+        color: #6b7280;
+        background-color: #f9fafb;
+        border: 1px solid #d1d5db;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+
+      .copy-btn:hover {
+        color: #111827;
+        background-color: #f3f4f6;
+      }
+
+      .copy-btn.copied {
+        color: #16a34a;
+        background-color: #f0fdf4;
+      }
+
+      .debug-code {
+        background-color: #f9fafb;
+        border: 1px solid #e5e7eb;
+        border-radius: 6px;
+        padding: 12px;
+        font-size: 12px;
+        font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+        color: #374151;
+        max-height: 160px;
+        overflow-y: auto;
+        white-space: pre-wrap;
+        word-break: break-all;
+      }
+
+      .loading-spinner {
+        display: inline-block;
+        width: 16px;
+        height: 16px;
+        border: 2px solid currentColor;
+        border-radius: 50%;
+        border-top-color: transparent;
+        animation: spin 1s linear infinite;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      @media (max-width: 640px) {
+        .error-overlay {
+          padding: 8px;
+        }
+
+        .error-container {
+          max-height: 95vh;
+        }
+
+        .recovery-actions {
+          flex-direction: column;
+        }
+
+        .btn {
+          justify-content: center;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="error-overlay" id="error-overlay">
+      <div class="error-container">
+        <div class="error-header">
+          <h1 class="error-title">Application Error</h1>
+          <p class="error-subtitle">Something went wrong while loading the application</p>
+        </div>
+        <div class="error-content">
+          <div class="error-message">
+            <div class="error-message-content">
+              <div class="error-icon">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+                  />
+                </svg>
+              </div>
+              <div class="error-text">
+                <h3>What happened</h3>
+                <p>placeholder-error-message</p>
+              </div>
+            </div>
+          </div>
+          <div class="recovery-section">
+            <div class="recovery-header">
+              <div class="recovery-icon">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+                  />
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                  />
+                </svg>
+              </div>
+              <div>
+                <div class="recovery-title">Suggested Solutions</div>
+                <div class="recovery-subtitle">These actions might help resolve the issue</div>
+              </div>
+            </div>
+            <div class="recovery-actions">
+              <button class="btn btn-primary" onclick="refreshPage()">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                  />
+                </svg>
+                Refresh
+              </button>
+              <button class="btn btn-secondary" onclick="clearCacheAndReload()">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                  />
+                </svg>
+                Clear Cache
+              </button>
+              <button class="btn btn-secondary" onclick="goHome()">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+                  />
+                </svg>
+                Go to Home
+              </button>
+            </div>
+          </div>
+          <div class="debug-section">
+            <div class="debug-toggle" onclick="toggleDebug()" aria-expanded="false">
+              <h4>Debug Information</h4>
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+            </div>
+            <div class="debug-content" id="debug-content">
+              <div class="debug-section-item">
+                <div class="debug-section-header">
+                  <div class="debug-section-label">Error Stack</div>
+                  <button class="copy-btn" onclick="copyToClipboard('stack')">Copy</button>
+                </div>
+                <div class="debug-code" id="error-stack">placeholder-error-stack</div>
+              </div>
+              <div class="debug-section-item">
+                <div class="debug-section-header">
+                  <div class="debug-section-label">Error Details</div>
+                  <button class="copy-btn" onclick="copyToClipboard('details')">Copy</button>
+                </div>
+                <div class="debug-code" id="error-details">placeholder-error-details</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      function toggleDebug() {
+        const toggle = document.querySelector('.debug-toggle')
+        const content = document.getElementById('debug-content')
+        const isExpanded = toggle.getAttribute('aria-expanded') === 'true'
+
+        toggle.setAttribute('aria-expanded', !isExpanded)
+        content.classList.toggle('active')
+      }
+
+      // Copy to clipboard functionality
+      async function copyToClipboard(type) {
+        const button = event.target
+        const originalText = button.textContent
+
+        let content = ''
+        if (type === 'stack') {
+          content = document.getElementById('error-stack').textContent
+        } else if (type === 'details') {
+          content = document.getElementById('error-details').textContent
+        }
+
+        try {
+          await navigator.clipboard.writeText(content)
+          button.textContent = 'Copied!'
+          button.classList.add('copied')
+
+          setTimeout(() => {
+            button.textContent = originalText
+            button.classList.remove('copied')
+          }, 2000)
+        } catch (err) {
+          console.error('Failed to copy: ', err)
+        }
+      }
+
+      // Recovery actions
+      function refreshPage() {
+        const btn = event.target.closest('button')
+        const originalHtml = btn.innerHTML
+        btn.innerHTML = '<span class="loading-spinner"></span> Refreshing...'
+        btn.disabled = true
+
+        setTimeout(() => {
+          window.location.reload()
+        }, 500)
+      }
+
+      async function clearCacheAndReload() {
+        const btn = event.target.closest('button')
+        const originalHtml = btn.innerHTML
+        btn.innerHTML = '<span class="loading-spinner"></span> Clearing...'
+        btn.disabled = true
+
+        try {
+          // Clear all caches
+          if ('caches' in window) {
+            const cacheNames = await caches.keys()
+            await Promise.all(cacheNames.map((name) => caches.delete(name)))
+          }
+
+          // Unregister service workers
+          if ('serviceWorker' in navigator) {
+            const registrations = await navigator.serviceWorker.getRegistrations().catch(() => [])
+            await Promise.all(registrations.map((reg) => reg.unregister()))
+          }
+
+          // Reload the page
+          setTimeout(() => {
+            window.location.reload()
+          }, 500)
+        } catch (error) {
+          console.error('Failed to clear cache:', error)
+          window.location.reload()
+        }
+      }
+
+      function goHome() {
+        const btn = event.target.closest('button')
+        const originalHtml = btn.innerHTML
+        btn.innerHTML = '<span class="loading-spinner"></span> Loading...'
+        btn.disabled = true
+
+        window.location.href = '/'
+      }
+
+      // Keyboard navigation
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          const firstButton = document.querySelector('.btn')
+          if (firstButton) firstButton.focus()
+        }
+      })
+    </script>
+  </body>
+</html>

@@ -1,0 +1,26 @@
+* {
+  @apply cursor-default box-border;
+}
+
+html {
+  @apply overscroll-y-none;
+}
+
+body {
+  @apply select-none;
+}
+
+a,
+button {
+  @apply cursor-default;
+}
+
+body.in-app .pwa-hidden {
+  display: none;
+}
+
+@media (display-mode: standalone) {
+  .pwa-hidden {
+    display: none;
+  }
+}

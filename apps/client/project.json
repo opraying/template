@@ -1,0 +1,52 @@
+{
+  "name": "template-client",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/client",
+  "projectType": "library",
+  "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/node_modules/.vitest/apps/client", "{workspaceRoot}/coverage/apps/client"],
+      "options": {
+        "command": "pnpm xdev test --project template-client"
+      }
+    },
+    "madge": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "madge --ts-config ./tsconfig.app.json --circular --no-color --no-spinner --extensions ts,tsx .",
+        "cwd": "apps/client"
+      }
+    },
+    "db": {
+      "executor": "nx:run-commands",
+      "defaultConfiguration": "seed",
+      "configurations": {
+        "seed": {
+          "command": "pnpm xdev db seed --cwd apps/client"
+        },
+        "push": {
+          "command": "pnpm xdev db push --cwd apps/client"
+        },
+        "dump": {
+          "command": "pnpm xdev db dump --cwd apps/client"
+        },
+        "execute": {
+          "command": "pnpm xdev db execute --cwd apps/client"
+        },
+        "dev": {
+          "command": "pnpm xdev db migrate dev --cwd apps/client"
+        },
+        "reset": {
+          "command": "pnpm xdev db migrate reset --cwd apps/client"
+        },
+        "deploy": {
+          "command": "pnpm xdev db migrate deploy --cwd apps/client"
+        },
+        "resolve": {
+          "command": "pnpm xdev db migrate resolve --cwd apps/client"
+        }
+      }
+    }
+  }
+}

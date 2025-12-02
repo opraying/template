@@ -1,0 +1,29 @@
+{
+  "name": "pkgs-form",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/form/src",
+  "projectType": "library",
+  "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/node_modules/.vitest/packages/form", "{workspaceRoot}/coverage/packages/form"],
+      "options": {
+        "command": "pnpm xdev test --project pkgs-form"
+      }
+    },
+    "madge": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "madge --ts-config ./tsconfig.lib.json --circular --no-color --no-spinner --extensions ts,tsx ./src",
+        "cwd": "packages/form"
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsgo -p packages/form/tsconfig.check.json"
+      }
+    }
+  },
+  "tags": []
+}

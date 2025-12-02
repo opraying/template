@@ -1,0 +1,32 @@
+{
+  "name": "pkgs-sql-kysely",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/sql-kysely/src",
+  "projectType": "library",
+  "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "outputs": [
+        "{workspaceRoot}/node_modules/.vitest/packages/sql-kysely",
+        "{workspaceRoot}/coverage/packages/sql-kysely"
+      ],
+      "options": {
+        "command": "pnpm xdev test --project pkgs-sql-kysely"
+      }
+    },
+    "madge": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "madge --ts-config ./tsconfig.lib.json --circular --no-color --no-spinner --extensions ts,tsx ./src",
+        "cwd": "packages/sql-kysely"
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsgo -p packages/sql-kysely/tsconfig.check.json"
+      }
+    }
+  },
+  "tags": []
+}

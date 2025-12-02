@@ -1,0 +1,33 @@
+{
+  "name": "pkgs-event-log",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/event-log/src",
+  "projectType": "library",
+  "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "outputs": [
+        "{workspaceRoot}/node_modules/.vitest/packages/event-log",
+        "{workspaceRoot}/coverage/packages/event-log"
+      ],
+      "options": {
+        "command": "pnpm xdev test --project pkgs-event-log"
+      }
+    },
+    "madge": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "madge --ts-config ./tsconfig.lib.json --circular --no-color --no-spinner --extensions ts,tsx ./src",
+        "cwd": "packages/event-log"
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["^build"],
+      "options": {
+        "command": "tsgo -p packages/event-log/tsconfig.check.json"
+      }
+    }
+  },
+  "tags": []
+}

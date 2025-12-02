@@ -1,0 +1,24 @@
+{
+  "name": "template-native",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/native",
+  "projectType": "application",
+  "targets": {
+    "madge": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "madge --ts-config ./tsconfig.app.json --circular --no-color --no-spinner --extensions ts,tsx .",
+        "cwd": "apps/native"
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsgo -p apps/native/tsconfig.check.json"
+      }
+    }
+  },
+  "tags": [
+    "native"
+  ]
+}

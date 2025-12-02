@@ -1,0 +1,26 @@
+diff --git a/index.d.ts b/index.d.ts
+index 46d06cadac6a2ab533f05e7131bb24f47775292e..88d4f6dbdcd2cb4fa8dacc3353822991742ef636 100644
+--- a/index.d.ts
++++ b/index.d.ts
+@@ -48,21 +48,6 @@ type ObjectOrNever = TypeOptions['allowObjectInHTMLChildren'] extends true
+ 
+ type ReactI18NextChildren = React.ReactNode | ObjectOrNever;
+ 
+-declare module 'react' {
+-  namespace JSX {
+-    interface IntrinsicAttributes {
+-      i18nIsDynamicList?: boolean;
+-    }
+-  }
+-
+-  interface HTMLAttributes<T> {
+-    // This union is inspired by the typings for React.ReactNode. We do this to fix "This JSX tag's 'children' prop
+-    // expects a single child of type 'ReactI18NextChildren', but multiple children were provided":
+-    // https://github.com/DefinitelyTyped/DefinitelyTyped/blob/5a1e9f91ed0143adede394adb3f540e650455f71/types/react/index.d.ts#L268
+-    children?: ReactI18NextChildren | Iterable<ReactI18NextChildren>;
+-  }
+-}
+-
+ type _DefaultNamespace = TypeOptions['defaultNS'];
+ 
+ export function useSSR(initialI18nStore: Resource, initialLanguage: string): void;

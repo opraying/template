@@ -1,0 +1,171 @@
+{
+  "load_direnv": "shell_hook",
+  "formatter": "prettier",
+  "format_on_save": "on",
+  "languages": {
+    "JSON": {
+      "language_servers": ["!oxc", "cspell", "json-language-server", "prettier"],
+      "formatter": "prettier"
+    },
+    "JSONC": {
+      "language_servers": ["!oxc", "cspell", "json-language-server", "prettier"],
+      "formatter": "prettier"
+    },
+    "TypeScript": {
+      "language_servers": ["vtsls", "oxc", "prettier", "cspell"],
+      "formatter": "prettier",
+      "code_actions_on_format": {
+        "source.fixAll.oxc": true
+      }
+    },
+    "TSX": {
+      "language_servers": ["vtsls", "oxc", "prettier", "cspell"],
+      "formatter": "prettier",
+      "code_actions_on_format": {
+        "source.fixAll.oxc": true
+      }
+    }
+  },
+  "lsp": {
+    "oxc": {},
+    "vtsls": {
+      "tsserver": {
+        "maxTsServerMemory": 8092,
+        "enableRegionDiagnostics": true
+      },
+      "experimental": {
+        "completion": {
+          "entriesLimit": 10,
+          "enableServerSideFuzzyMatch": true
+        }
+      },
+      "autoUseWorkspaceTsdk": true,
+      "settings": {
+        "typescript": {
+          "tsserver": { "maxTsServerMemory": 8092, "enableRegionDiagnostics": true },
+          "workspaceSymbols": { "scope": "currentProject" },
+          "preferGoToSourceDefinition": true,
+          "preferences": {
+            "importModuleSpecifier": "non-relative",
+            "autoImportSpecifierExcludeRegexes": [
+              "^@radix-ui/.*",
+              "^node:.*$",
+              "^cloudflare:.*",
+              "^react-router",
+              "^@cloudflare/.*",
+              "^@glideapps/.*",
+              "^@sanity/.*",
+              "^i18next",
+              "^react-i18next",
+              "^react$",
+              "^react-dom",
+              "^remeda",
+              "^type-fest",
+              "@opentelemetry/.*",
+              "effect/.*",
+              "@effect/.*",
+              "^framer-motion"
+            ]
+          }
+        }
+      }
+    },
+    "tailwindcss-language-server": {
+      "settings": {
+        "tailwindCSS": {
+          "emmetCompletions": true
+        }
+      }
+    }
+  },
+  "file_scan_exclusions": [
+    // Version control
+    // ".git",
+
+    // Environment and config files
+    ".direnv",
+    ".envrc",
+    ".env",
+    "**/.env",
+    "**/.env.*",
+    ".node-version",
+    ".editorconfig",
+
+    // Editor and IDE
+    ".cursor",
+    ".cursorignore",
+    ".vscode",
+    // ".zed",
+
+    // Build and dependency tools
+    "**/.sanity",
+    "**/.react-router",
+    ".nx",
+    "nx.json",
+    "*turbo.json",
+    "*.turbo",
+    ".expo",
+    ".venv",
+    "**/node_modules",
+    "**/pnpm-lock.yaml",
+    "**/pnpm-workspace.yaml",
+    "patches",
+
+    // Package and project config
+    "**/package.json",
+    "**/project.json",
+    "**/tsconfig.json",
+    "**/tsconfig.*.json",
+
+    // Build output
+    "**/build",
+    "**/dist",
+    "**/.wrangler",
+    "**/wrangler.*",
+    "coverage",
+    "**/*.tsbuildinfo",
+
+    // Configuration files
+    ".prettierignore",
+    ".prettierrc",
+    "cspell.json",
+    "**/.oxlintrc.json",
+    "flake.*",
+    "lefthook.yml",
+    "nx.json",
+
+    // Development and testing
+    "**/vite.config.ts",
+    "**/vitest.config.ts",
+    "**/postcss.config.*",
+    "**/analyze-*.json",
+    "**/analyze-*.html",
+
+    // Framework and library specific
+    "**/env.d.ts",
+    "**/i18n.d.ts",
+    "**/client.d.ts",
+    "**/sw.ts",
+    "**/entry.client.ts",
+    "**/entry.server.ts",
+    "**/layout.client.ts",
+    "**/layout.client.tsx",
+    "**/layout.route.tsx",
+    "**/screen.client.ts",
+    "**/screen.client.tsx",
+    "**/screen.route.tsx",
+    "**/context.*.ts",
+    "**/react-router.config.ts",
+    "worker-configuration.d.ts",
+
+    // Special
+    ".DS_Store",
+    ".obsidian",
+    ".claude",
+    "README.md",
+    "AGENTS.md",
+    "CLAUDE.md",
+    ".mcp.json",
+    "migrations.json"
+  ]
+}

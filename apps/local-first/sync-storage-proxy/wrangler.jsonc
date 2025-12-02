@@ -1,0 +1,61 @@
+{
+  "$schema": "https://www.unpkg.com/wrangler/config-schema.json",
+  "name": "template-sync-storage-proxy",
+  "compatibility_date": "2025-09-25",
+  "compatibility_flags": ["nodejs_compat", "enable_request_signal"],
+  "main": "index.ts",
+  "send_metrics": false,
+  "workers_dev": false,
+  "preview_urls": false,
+  "logpush": false,
+  "upload_source_maps": true,
+  "placement": {
+    "mode": "smart",
+  },
+  "rules": [
+    {
+      "globs": ["**/*.js"],
+      "type": "ESModule",
+    },
+  ],
+  "limits": {
+    "cpu_ms": 30,
+  },
+  "observability": {
+    "enabled": true,
+  },
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "SYNC_STORAGE_PROXY_DURABLE_OBJECT",
+        "class_name": "SyncStorageProxyDurableObject",
+      },
+    ],
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": ["SyncStorageProxyDurableObject"],
+    },
+  ],
+  "env": {
+    "test": {
+      "workers_dev": true,
+      "durable_objects": {
+        "bindings": [
+          {
+            "name": "SYNC_STORAGE_PROXY_DURABLE_OBJECT",
+            "class_name": "SyncStorageProxyDurableObject",
+            "script_name": "template-sync-storage-proxy-test",
+          },
+        ],
+      },
+      "migrations": [
+        {
+          "tag": "v1",
+          "new_sqlite_classes": ["SyncStorageProxyDurableObject"],
+        },
+      ],
+    },
+  },
+}

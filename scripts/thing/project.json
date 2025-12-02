@@ -1,0 +1,29 @@
+{
+  "name": "scripts-thing",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "scripts/thing",
+  "projectType": "application",
+  "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/node_modules/.vitest/scripts/thing", "{workspaceRoot}/coverage/scripts/thing"],
+      "options": {
+        "command": "pnpm xdev test --project scripts-thing"
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsgo -p scripts/thing/tsconfig.json"
+      }
+    },
+    "madge": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "madge --ts-config ./tsconfig.json --circular --no-color --no-spinner --extensions ts,tsx .",
+        "cwd": "scripts/thing"
+      }
+    }
+  },
+  "tags": []
+}

@@ -1,0 +1,12 @@
+.gitignore
+
+README.md
+
+.env
+.env.github
+
+pnpm-lock.yaml
+tsconfig.base.json
+project-manifest.ts
+docs
+apps

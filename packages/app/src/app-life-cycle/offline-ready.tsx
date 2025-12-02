@@ -1,0 +1,21 @@
+import { useAppOfflineReady } from '@xstack/app/app-life-cycle/provider'
+import { cn } from '@/lib/utils'
+
+interface Props {
+  className?: string
+  visible?: boolean
+}
+
+export function OfflineReady({ className, visible }: Props) {
+  const offlineReady = useAppOfflineReady()
+  const shouldShow = visible ?? offlineReady
+
+  if (!shouldShow) return null
+
+  return (
+    <div className={cn('flex min-h-[40px] items-center py-1 space-x-1', className)}>
+      <div className="w-2.5 h-2.5 bg-green-600 rounded-full" />
+      <div>Ready to work offline</div>
+    </div>
+  )
+}

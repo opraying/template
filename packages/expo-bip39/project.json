@@ -1,0 +1,40 @@
+{
+  "name": "pkgs-expo-bip39",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/expo-bip39/src",
+  "projectType": "library",
+  "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "outputs": [
+        "{workspaceRoot}/node_modules/.vitest/packages/expo-bip39",
+        "{workspaceRoot}/coverage/packages/expo-bip39"
+      ],
+      "options": {
+        "command": "pnpm xdev test --project pkgs-expo-bip39"
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{projectRoot}/dist"],
+      "options": {
+        "command": "tsc --build tsconfig.build.json",
+        "cwd": "packages/expo-bip39"
+      }
+    },
+    "madge": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "madge --ts-config ./tsconfig.lib.json --circular --no-color --no-spinner --extensions ts,tsx ./src",
+        "cwd": "packages/expo-bip39"
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsgo -p packages/expo-bip39/tsconfig.check.json"
+      }
+    }
+  },
+  "tags": []
+}

@@ -1,0 +1,32 @@
+{
+  "name": "pkgs-purchase",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/purchase/src",
+  "projectType": "library",
+  "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "outputs": [
+        "{workspaceRoot}/node_modules/.vitest/packages/purchase",
+        "{workspaceRoot}/coverage/packages/purchase"
+      ],
+      "options": {
+        "command": "pnpm xdev test --project pkgs-purchase"
+      }
+    },
+    "madge": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "madge --ts-config ./tsconfig.lib.json --circular --no-color --no-spinner --extensions ts,tsx ./src",
+        "cwd": "packages/purchase"
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsgo -p packages/purchase/tsconfig.check.json"
+      }
+    }
+  },
+  "tags": []
+}

@@ -1,0 +1,3 @@
+export const AUTH_USER_NAME = 'x-user'
+
+export const SYNC_STORAGE_EVENT_NAME = 'AHOOKS_SYNC_STORAGE_EVENT_NAME'

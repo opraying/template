@@ -1,0 +1,31 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`RSSBuilder > snapshot test for RSS feed 1`] = `
+"<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <atom:link href="https://example.com" rel="self" type="application/rss+xml"></atom:link>
+    <title><![CDATA[Example RSS Feed]]></title>
+    <description><![CDATA[An example RSS feed.]]></description>
+    <link>https://example.com</link>
+    <generator>Example Generator</generator>
+    <language>en</language>
+    <webMaster>news-webmaster@google.com (Frank Luksa)</webMaster>
+    <lastBuildDate>Mon, 01 Jan 2000 00:00:00 GMT</lastBuildDate>
+    <item>
+      <title><![CDATA[Example Item]]></title>
+      <description><![CDATA[An example item.]]></description>
+      <link isPermaLink="false">https://example.com/item</link>
+      <guid>https://example.com/item</guid>
+      <pubDate>Mon, 01 Jan 2000 00:00:00 GMT</pubDate>
+    </item>
+    <item>
+      <title><![CDATA[Example Item 2]]></title>
+      <description><![CDATA[An example item 2.]]></description>
+      <link isPermaLink="false">https://example.com/item2</link>
+      <guid>https://example.com/item2</guid>
+      <pubDate>Mon, 01 Jan 2000 00:00:00 GMT</pubDate>
+    </item>
+  </channel>
+</rss>"
+`;

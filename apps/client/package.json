@@ -1,0 +1,9 @@
+{
+  "name": "template-client",
+  "type": "module",
+  "version": "0.0.0",
+  "private": true,
+  "sideEffects": [],
+  "devDependencies": {},
+  "dependencies": {}
+}
