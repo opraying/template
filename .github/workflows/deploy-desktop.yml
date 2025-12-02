@@ -1,0 +1,83 @@
+name: 🚀 Deploy Desktop
+
+on:
+  workflow_run:
+    workflows:
+      - '💻 Desktop Builds'
+    types:
+      - completed
+
+permissions:
+  contents: write
+  deployments: write
+
+concurrency:
+  group: deploy-desktop-${{ github.event.workflow_run.head_branch }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Publish desktop artifacts
+    if: >
+      github.event.workflow_run.conclusion == 'success' &&
+      (github.event.workflow_run.event == 'push' || github.event.workflow_run.event == 'workflow_dispatch') &&
+      (
+        github.event.workflow_run.head_branch == 'main' ||
+        github.event.workflow_run.head_branch == 'staging' ||
+        github.event.workflow_run.head_branch == 'test'
+      )
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.workflow_run.head_branch == 'main' && 'production' || github.event.workflow_run.head_branch == 'staging' && 'staging' || 'test' }}
+    timeout-minutes: 45
+    env:
+      DESKTOP_DEPLOY_TARGET: ${{ vars.DESKTOP_DEPLOY_TARGET || 'r2' }}
+      DESKTOP_R2_PREFIX: ${{ vars.DESKTOP_R2_PREFIX }}
+      DESKTOP_RELEASE_TAG: ${{ vars.DESKTOP_RELEASE_TAG }}
+      DESKTOP_RELEASE_NAME: ${{ vars.DESKTOP_RELEASE_NAME }}
+      DESKTOP_RELEASE_BODY: ${{ vars.DESKTOP_RELEASE_BODY }}
+      DESKTOP_RELEASE_DRAFT: ${{ vars.DESKTOP_RELEASE_DRAFT }}
+      CLOUDFLARE_R2_BUCKET: ${{ secrets.CLOUDFLARE_R2_BUCKET }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      CLOUDFLARE_R2_ACCESS_KEY_ID: ${{ secrets.CLOUDFLARE_R2_ACCESS_KEY_ID }}
+      CLOUDFLARE_R2_SECRET_ACCESS_KEY: ${{ secrets.CLOUDFLARE_R2_SECRET_ACCESS_KEY }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: ⬇️ Checkout
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          fetch-depth: 0
+
+      - name: 🚧 Setup workspace
+        uses: ./.github/actions/setup
+
+      - name: ⬇️ Download desktop artifact
+        uses: actions/download-artifact@v5
+        continue-on-error: true
+        with:
+          name: desktop-dist
+          run-id: ${{ github.event.workflow_run.id }}
+
+      - name: 🔎 Check artifact
+        id: artifact
+        run: |
+          if [ -f "desktop-dist.tar.gz" ]; then
+            echo "found=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "found=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: 📦 Unpack desktop dist
+        if: steps.artifact.outputs.found == 'true'
+        run: |
+          mkdir -p dist
+          tar -xzf desktop-dist.tar.gz
+          ls -al dist
+
+      - name: 🚀 Run desktop deploy stage
+        if: steps.artifact.outputs.found == 'true'
+        run: pnpm tsx scripts/run-ci-stage.ts --stage deploy-desktop
+
+      - name: ℹ️ No desktop artifact found
+        if: steps.artifact.outputs.found != 'true'
+        run: echo "desktop-dist artifact missing for run ${{ github.event.workflow_run.id }}. Skipping deploy."

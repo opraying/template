@@ -46,7 +46,7 @@
   {
     "label": "Madge",
     "command": "bash",
-    "args": ["scripts/run-nx-affected.sh", "pnpm nx affected -t madge"],
+    "args": ["scripts/nx-run-affected.sh", "pnpm nx affected -t madge"],
     "use_new_terminal": false,
     "allow_concurrent_runs": false,
     "reveal": "always",
@@ -70,7 +70,7 @@
   {
     "label": "Affected Typecheck",
     "command": "bash",
-    "args": ["scripts/run-nx-affected.sh", "pnpm nx affected -t typecheck"],
+    "args": ["scripts/nx-run-affected.sh", "pnpm nx affected -t typecheck"],
     "use_new_terminal": false,
     "allow_concurrent_runs": false,
     "reveal": "always",
@@ -94,7 +94,7 @@
   {
     "label": "Affected Test",
     "command": "bash",
-    "args": ["scripts/run-nx-affected.sh", "pnpm nx affected -t test -c all"],
+    "args": ["scripts/nx-run-affected.sh", "pnpm nx affected -t test -c all"],
     "use_new_terminal": false,
     "allow_concurrent_runs": false,
     "reveal": "always",
@@ -130,7 +130,7 @@
   {
     "label": "Affected App Build",
     "command": "bash",
-    "args": ["scripts/run-nx-affected.sh", "pnpm nx affected -t app-build"],
+    "args": ["scripts/nx-run-affected.sh", "pnpm nx affected -t app-build"],
     "use_new_terminal": false,
     "allow_concurrent_runs": false,
     "reveal": "always",
@@ -154,7 +154,7 @@
   {
     "label": "Affected App Deploy",
     "command": "bash",
-    "args": ["scripts/run-nx-affected.sh", "pnpm nx affected -t app-deploy"],
+    "args": ["scripts/nx-run-affected.sh", "pnpm nx affected -t app-deploy"],
     "use_new_terminal": false,
     "allow_concurrent_runs": false,
     "reveal": "always",

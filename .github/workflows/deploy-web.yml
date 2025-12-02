@@ -1,0 +1,72 @@
+name: 🚀 Deploy Web
+
+on:
+  workflow_run:
+    workflows:
+      - '🌐 Web Build & Tests'
+    types:
+      - completed
+
+permissions:
+  contents: read
+  deployments: write
+
+concurrency:
+  group: deploy-web-${{ github.event.workflow_run.head_branch }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy artifacts
+    if: >
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push' &&
+      (github.event.workflow_run.head_branch == 'main' ||
+       github.event.workflow_run.head_branch == 'staging' ||
+       github.event.workflow_run.head_branch == 'test' ||
+       startsWith(github.event.workflow_run.head_branch, 'feat-'))
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.workflow_run.head_branch == 'main' && 'production' || github.event.workflow_run.head_branch == 'staging' && 'staging' || 'test' }}
+    timeout-minutes: 30
+    steps:
+      - name: ⬇️ Checkout
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          fetch-depth: 0
+
+      - name: 🚧 Setup workspace
+        uses: ./.github/actions/setup
+
+      - name: ⬇️ Download web artifact
+        id: download
+        uses: actions/download-artifact@v5
+        continue-on-error: true
+        with:
+          name: web-dist
+          run-id: ${{ github.event.workflow_run.id }}
+
+      - name: 🔎 Check artifact
+        id: artifact-check
+        run: |
+          if [ -f "web-dist.tar.gz" ]; then
+            echo "found=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "found=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: 📦 Unpack dist
+        if: steps.artifact-check.outputs.found == 'true'
+        run: tar -xzf web-dist.tar.gz
+
+      - name: 🚀 Deploy web targets
+        if: steps.artifact-check.outputs.found == 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: pnpm tsx scripts/run-ci-stage.ts --stage deploy-web
+
+      - name: ℹ️ No artifacts to deploy
+        if: steps.artifact-check.outputs.found != 'true'
+        run: echo "No web-dist artifact available for run ${{ github.event.workflow_run.id }} (likely skipped build). Nothing to deploy."

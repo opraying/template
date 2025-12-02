@@ -33,6 +33,7 @@ jobs:
           upstream_branch: main
           is_pr_cleanup: true
           pr_labels: 🔁 template-sync
+          pr_branch_name_prefix: misc/template-sync
       - name: 📊 Report Sync Status
         if: always()
         run: |

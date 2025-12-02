@@ -1,0 +1,67 @@
+name: 🌐 Web Build & Tests
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - main
+      - test
+      - staging
+      - 'feat-*'
+  push:
+    branches:
+      - main
+      - test
+      - staging
+      - 'feat-*'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: web-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build & Package Web Targets
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: ⬇️ Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: 🚧 Setup workspace
+        uses: ./.github/actions/setup
+
+      - name: 🔍 Detect impacted web surface
+        id: detect
+        run: pnpm tsx scripts/detect-ci-surfaces.ts --surface web --format github
+
+      - name: 💤 Skip web build
+        if: steps.detect.outputs.surface-web != 'true'
+        run: echo "No web/server style projects affected. Skipping build."
+
+      - name: 🏗️ Run web build stage
+        if: steps.detect.outputs.surface-web == 'true'
+        run: pnpm tsx scripts/run-ci-stage.ts --stage web
+
+      - name: 📦 Package dist
+        if: steps.detect.outputs.surface-web == 'true'
+        run: |
+          if [ ! -d "dist" ]; then
+            echo "dist folder not found. Nothing to package."
+            exit 0
+          fi
+          tar -czf web-dist.tar.gz dist
+
+      - name: ⬆️ Upload web artifact
+        if: steps.detect.outputs.surface-web == 'true'
+        uses: actions/upload-artifact@v5
+        with:
+          name: web-dist
+          path: web-dist.tar.gz
+          if-no-files-found: ignore
+          retention-days: 3

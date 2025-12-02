@@ -1,0 +1,80 @@
+name: 🚀 Deploy iOS
+
+on:
+  workflow_run:
+    workflows:
+      - '🍎 iOS Build'
+    types:
+      - completed
+
+permissions:
+  contents: read
+  deployments: write
+
+concurrency:
+  group: deploy-ios-${{ github.event.workflow_run.head_branch }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Submit iOS artifact
+    if: >
+      github.event.workflow_run.conclusion == 'success' &&
+      (github.event.workflow_run.event == 'push' || github.event.workflow_run.event == 'workflow_dispatch') &&
+      (github.event.workflow_run.head_branch == 'main' ||
+       github.event.workflow_run.head_branch == 'staging' ||
+       github.event.workflow_run.head_branch == 'test')
+    runs-on: macos-latest
+    environment: ${{ github.event.workflow_run.head_branch == 'main' && 'production' || github.event.workflow_run.head_branch == 'staging' && 'staging' || 'test' }}
+    timeout-minutes: 60
+    env:
+      EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+    steps:
+      - name: ⬇️ Checkout
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          fetch-depth: 0
+
+      - name: 🚧 Setup workspace
+        uses: ./.github/actions/setup
+
+      - name: ⬇️ Download preview artifact
+        continue-on-error: true
+        uses: actions/download-artifact@v5
+        with:
+          name: native-ios-preview
+          run-id: ${{ github.event.workflow_run.id }}
+          path: artifacts-preview
+
+      - name: ⬇️ Download production artifact
+        continue-on-error: true
+        uses: actions/download-artifact@v5
+        with:
+          name: native-ios-production
+          run-id: ${{ github.event.workflow_run.id }}
+          path: artifacts-production
+
+      - name: 📦 Extract artifacts
+        id: extract
+        shell: bash
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          files=(artifacts-*/native-ios-*.tar.gz)
+          if (( ${#files[@]} == 0 )); then
+            echo "found=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          for file in "${files[@]}"; do
+            tar -xzf "$file"
+          done
+          echo "found=true" >> "$GITHUB_OUTPUT"
+
+      - name: 🚀 Submit to App Store
+        if: steps.extract.outputs.found == 'true'
+        run: pnpm tsx scripts/run-ci-stage.ts --stage deploy-native-ios --platform macos
+
+      - name: ℹ️ No artifacts to deploy
+        if: steps.extract.outputs.found != 'true'
+        run: echo "No iOS artifacts were available for run ${{ github.event.workflow_run.id }}."

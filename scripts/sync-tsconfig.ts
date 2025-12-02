@@ -4,8 +4,8 @@ import { workspaceRoot } from '@nx/devkit'
 import { exec } from 'node:child_process'
 import * as fs from 'node:fs/promises'
 import * as path from 'node:path'
-import { ALIAS_DEFINITIONS, PROJECT_DEFINITIONS } from '../../project-manifest'
-import baseConfig from './base-config.json'
+import { ALIAS_DEFINITIONS, PROJECT_DEFINITIONS } from '../project-manifest'
+import baseConfig from './generate-tsconfig/base-config.json'
 import {
   applyAliasPathsToBaseConfig,
   buildProjectBaseTsconfig,
@@ -13,8 +13,8 @@ import {
   generateAppConfigs,
   generateAppLibraryConfigs,
   generatePackageLibraryConfigs,
-} from './config'
-import type { ProjectItemDeclaration } from './types'
+} from './generate-tsconfig/config'
+import type { ProjectItemDeclaration } from './generate-tsconfig/types'
 
 async function generateTsConfigFile({
   filePath,

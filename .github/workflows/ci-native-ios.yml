@@ -1,0 +1,122 @@
+name: 🍎 iOS Build
+
+on:
+  workflow_dispatch:
+    inputs:
+      profile:
+        type: choice
+        default: preview
+        options:
+          - preview
+          - production
+        description: 'EAS build profile'
+  pull_request:
+    branches:
+      - main
+      - test
+      - staging
+      - 'feat-*'
+  push:
+    branches:
+      - main
+      - test
+      - staging
+      - 'feat-*'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: native-ios-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  detect:
+    name: Detect iOS impact
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      impacted: ${{ steps.detect.outputs.surface-native-ios }}
+    steps:
+      - name: ⬇️ Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: 🚧 Setup workspace
+        uses: ./.github/actions/setup
+
+      - name: 🔍 Detect surface
+        id: detect
+        run: pnpm tsx scripts/detect-ci-surfaces.ts --surface native-ios --format github
+
+  build:
+    name: Build iOS artifact
+    needs: detect
+    if: needs.detect.outputs.impacted == 'true' && github.secret_source != 'None'
+    runs-on: macos-latest
+    timeout-minutes: 120
+    env:
+      EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+    steps:
+      - name: ⬇️ Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: 🚧 Setup workspace
+        uses: ./.github/actions/setup
+
+      - name: 📋 Determine build profile
+        id: profile
+        shell: bash
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            PROFILE="${{ github.event.inputs.profile }}"
+          elif [[ "${{ github.ref_name }}" == "main" ]]; then
+            PROFILE="production"
+          else
+            PROFILE="preview"
+          fi
+          echo "profile=$PROFILE" >> "$GITHUB_OUTPUT"
+          echo "EAS_IOS_PROFILE=$PROFILE" >> "$GITHUB_ENV"
+
+      - name: 📱 Setup EAS CLI
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: 🏗️ Run iOS stage
+        run: pnpm tsx scripts/run-ci-stage.ts --stage native-ios --platform macos
+
+      - name: 📦 Package artifact
+        id: package
+        shell: bash
+        run: |
+          mkdir -p artifacts
+          PROFILE="${{ steps.profile.outputs.profile }}"
+          ARTIFACT_PATH="dist/native/ios-${PROFILE}.ipa"
+          if [[ ! -f "$ARTIFACT_PATH" ]]; then
+            echo "Artifact $ARTIFACT_PATH not found." >&2
+            exit 1
+          fi
+          tar -czf "artifacts/native-ios-${PROFILE}.tar.gz" "$ARTIFACT_PATH"
+          echo "artifact-name=native-ios-${PROFILE}" >> "$GITHUB_OUTPUT"
+          echo "artifact-path=artifacts/native-ios-${PROFILE}.tar.gz" >> "$GITHUB_OUTPUT"
+
+      - name: ⬆️ Upload artifact
+        uses: actions/upload-artifact@v5
+        with:
+          name: ${{ steps.package.outputs.artifact-name }}
+          path: ${{ steps.package.outputs.artifact-path }}
+          if-no-files-found: error
+          retention-days: 7
+
+  skip:
+    name: Nothing to build
+    needs: detect
+    if: needs.detect.outputs.impacted != 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "No iOS-related Nx projects changed. Skipping builds."

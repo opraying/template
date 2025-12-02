@@ -1,0 +1,90 @@
+name: 💻 Desktop Builds
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - main
+      - test
+      - staging
+      - 'feat-*'
+  push:
+    branches:
+      - main
+      - test
+      - staging
+      - 'feat-*'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: desktop-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  detect:
+    name: Detect desktop impact
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      surface-desktop: ${{ steps.detect.outputs.surface-desktop }}
+    steps:
+      - name: ⬇️ Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: 🚧 Setup workspace
+        uses: ./.github/actions/setup
+
+      - name: 🔍 Detect desktop surface
+        id: detect
+        run: pnpm tsx scripts/detect-ci-surfaces.ts --surface desktop --format github
+
+  build:
+    name: Build desktop artifacts
+    needs: detect
+    if: needs.detect.outputs.surface-desktop == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: ⬇️ Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: 🚧 Setup workspace
+        uses: ./.github/actions/setup
+
+      - name: 🏗️ Run desktop stage
+        run: pnpm tsx scripts/run-ci-stage.ts --stage desktop
+
+      - name: 📦 Package desktop dist
+        id: package
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ ! -d "dist/desktop" ]; then
+            echo "created=false" >> "$GITHUB_OUTPUT"
+            echo "dist/desktop not found. Skipping artifact packaging."
+            exit 0
+          fi
+          tar -czf desktop-dist.tar.gz dist/desktop
+          echo "created=true" >> "$GITHUB_OUTPUT"
+
+      - name: ⬆️ Upload desktop artifact
+        if: steps.package.outputs.created == 'true'
+        uses: actions/upload-artifact@v5
+        with:
+          name: desktop-dist
+          path: desktop-dist.tar.gz
+          if-no-files-found: error
+          retention-days: 7
+
+  skip:
+    name: Nothing to build
+    needs: detect
+    if: needs.detect.outputs.surface-desktop != 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "No desktop/electron projects affected. Skipping."

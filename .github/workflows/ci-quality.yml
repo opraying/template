@@ -1,0 +1,50 @@
+name: 🧪 Quality Checks
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - main
+      - test
+      - staging
+      - 'feat-*'
+  push:
+    branches:
+      - main
+      - test
+      - staging
+      - 'feat-*'
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: quality-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: Lint, Typecheck & Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: ⬇️ Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: 🚧 Setup workspace
+        uses: ./.github/actions/setup
+
+      - name: 🔍 Detect impacted lint surface
+        id: detect
+        run: pnpm tsx scripts/detect-ci-surfaces.ts --surface lint --format github
+
+      - name: ✨ Run quality stage
+        if: steps.detect.outputs.surface-lint == 'true'
+        run: pnpm tsx scripts/run-ci-stage.ts --stage lint
+
+      - name: ✅ Nothing to lint
+        if: steps.detect.outputs.surface-lint != 'true'
+        run: echo "No Nx projects affected for lint/typecheck/tests. Skipping the quality stage."

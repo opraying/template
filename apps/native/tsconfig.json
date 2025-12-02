@@ -8,9 +8,6 @@
       "path": "./tsconfig.test.json"
     }
   ],
-  "include": [
-    "./nativewind-env.d.ts",
-    "nativewind-env.d.ts"
-  ],
+  "include": ["nativewind-env.d.ts"],
   "files": []
 }
