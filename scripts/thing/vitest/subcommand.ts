@@ -1,7 +1,7 @@
 import { Command, Path, FileSystem } from '@effect/platform'
-import { workspaceRoot } from '@nx/devkit'
 import { Console, Effect, Stream } from 'effect'
-import type { TestSubcommand } from '../domain'
+import type { TestSubcommand } from './domain'
+import { workspaceRoot } from '@nx/devkit'
 
 export const runTest = Effect.fn(function* (subcommand: TestSubcommand) {
   const path = yield* Path.Path
@@ -26,7 +26,7 @@ export const runTest = Effect.fn(function* (subcommand: TestSubcommand) {
   const testProjects: any[] = vitestConfig.default?.test?.projects || []
 
   if (testProjects.length === 0) {
-    return yield* Effect.logDebug('No test projects found in vitest.config.ts')
+    return yield* Effect.logInfo('No test projects found in vitest.config.ts')
   }
 
   // Get all available test project names
@@ -61,8 +61,8 @@ export const runTest = Effect.fn(function* (subcommand: TestSubcommand) {
     })
 
     if (matchingTests.length === 0) {
-      yield* Effect.logDebug(`No tests found for project: ${project}${mode ? ` with mode: ${mode}` : ''}`)
-      yield* Effect.logDebug(`Available test projects:`).pipe(
+      yield* Effect.logInfo(`No tests found for project: ${project}${mode ? ` with mode: ${mode}` : ''}`)
+      yield* Effect.logInfo(`Available test projects:`).pipe(
         Effect.annotateLogs({
           projects: availableTests,
         }),
@@ -70,7 +70,7 @@ export const runTest = Effect.fn(function* (subcommand: TestSubcommand) {
       return
     }
 
-    yield* Effect.logDebug(`Found ${matchingTests.length} matching test(s):`).pipe(
+    yield* Effect.logInfo(`Found ${matchingTests.length} matching test(s):`).pipe(
       Effect.annotateLogs({
         projects: matchingTests,
       }),
@@ -94,7 +94,7 @@ export const runTest = Effect.fn(function* (subcommand: TestSubcommand) {
     args.push(`--browser.headless=${headless}`)
   }
 
-  yield* Effect.logDebug('Running vitest with projects').pipe(Effect.annotateLogs({ args }))
+  yield* Effect.logInfo('Running vitest with projects').pipe(Effect.annotateLogs({ args }))
 
   const outStream = Command.make('vitest', ...args).pipe(
     Command.workingDirectory(workspaceRoot),

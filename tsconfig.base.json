@@ -81,13 +81,13 @@
       "@xstack/fx/*": ["./packages/fx/src/*"],
       "@xstack/fx": ["./packages/fx/src/"],
       "@/components/ui/*": ["./packages/lib/src/ui/*"],
-      "@/lib/*": ["./packages/lib/src/*"]
+      "@/lib/*": ["./packages/lib/src/*"],
     },
     "plugins": [
       {
-        "name": "@effect/language-service"
-      }
-    ]
+        "name": "@effect/language-service",
+      },
+    ],
   },
-  "exclude": ["node_modules", "dist", "build", ".wrangler", "coverage", "public"]
+  "exclude": ["node_modules", "dist", "build", ".wrangler", "coverage", "public"],
 }

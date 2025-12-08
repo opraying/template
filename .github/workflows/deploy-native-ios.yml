@@ -73,7 +73,7 @@ jobs:
 
       - name: 🚀 Submit to App Store
         if: steps.extract.outputs.found == 'true'
-        run: pnpm tsx scripts/run-ci-stage.ts --stage deploy-native-ios --platform macos
+        run: tsx scripts/run-ci-stage.ts --stage deploy-native-ios --platform macos
 
       - name: ℹ️ No artifacts to deploy
         if: steps.extract.outputs.found != 'true'

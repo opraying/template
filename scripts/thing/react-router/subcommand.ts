@@ -2,23 +2,22 @@ import { FileSystem, Path } from '@effect/platform'
 import { Effect, Layer, pipe } from 'effect'
 import { ReactRouterOnCloudflare } from './cloudflare'
 import {
-  BuildReactRouterParameters,
-  type BuildReactRouterTarget,
   type BuildSubcommand,
   type BuildTarget,
   type DeploySubcommand,
   type PreviewSubcommand,
   type ServeSubcommand,
 } from '../domain'
+import { BuildReactRouterParameters, type BuildReactRouterTarget } from './domain'
 import * as Environment from '../environment'
-import { shell } from '../utils'
+import { shell } from '../utils/shell'
 import * as Workspace from '../workspace'
 
 export const serve = Effect.fn('react-router.serve')(function* (
   workspace: Workspace.Workspace,
   subcommand: ServeSubcommand,
 ) {
-  yield* Effect.logDebug(`Serve ${workspace.projectName}`)
+  yield* Effect.logInfo(`Serve ${workspace.projectName}`)
 
   if (subcommand.target._tag !== 'BuildReactRouter') {
     return yield* Effect.dieMessage('Invalid target')
@@ -64,7 +63,7 @@ export const build = Effect.fn('react-router.build')(function* (
   const fs = yield* FileSystem.FileSystem
   const path = yield* Path.Path
 
-  yield* Effect.logDebug('Start building app')
+  yield* Effect.logInfo('Start building app')
 
   if (subcommand.target._tag !== 'BuildReactRouter') {
     return yield* Effect.dieMessage('Invalid target')
@@ -104,7 +103,7 @@ export const build = Effect.fn('react-router.build')(function* (
   )
 
   yield* pipe(
-    Effect.logDebug('Clean dist folder'),
+    Effect.logInfo('Clean dist folder'),
     Effect.andThen(
       shell`
         $ rm -rf ${workspace.projectOutput.dist}
@@ -134,7 +133,7 @@ export const build = Effect.fn('react-router.build')(function* (
     .start(subcommand)
     .pipe(Effect.provide(BuildLive), Effect.withConfigProvider(environment.configProvider))
 
-  return yield* Effect.logDebug('Build finished')
+  return yield* Effect.logInfo('Build finished')
 })
 
 export const deploy = Effect.fn('react-router.deploy')(function* (
@@ -142,7 +141,7 @@ export const deploy = Effect.fn('react-router.deploy')(function* (
   subcommand: DeploySubcommand,
   buildTarget: BuildTarget,
 ) {
-  yield* Effect.logDebug(`Deploy ${workspace.projectName}`)
+  yield* Effect.logInfo(`Deploy ${workspace.projectName}`)
 
   if (buildTarget._tag !== 'BuildReactRouter') {
     return yield* Effect.dieMessage('Invalid build target')
@@ -187,7 +186,7 @@ export const preview = Effect.fn('react-router.preview')(function* (
   subcommand: PreviewSubcommand,
   buildTarget: BuildTarget,
 ) {
-  yield* Effect.logDebug(`Preview ${workspace.projectName}`)
+  yield* Effect.logInfo(`Preview ${workspace.projectName}`)
 
   if (buildTarget._tag !== 'BuildReactRouter') {
     return yield* Effect.dieMessage('Invalid build target')

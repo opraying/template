@@ -3,4 +3,5 @@
   <string name="expo_system_ui_user_interface_style" translatable="false">automatic</string>
   <string name="expo_splash_screen_resize_mode" translatable="false">contain</string>
   <string name="expo_splash_screen_status_bar_translucent" translatable="false">false</string>
+  <string name="hot_updater_fingerprint_hash" moduleConfig="true">2c37523b16b2c15f5af5d6f0ea2f863f008cd56a</string>
 </resources>

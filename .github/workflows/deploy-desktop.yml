@@ -76,7 +76,7 @@ jobs:
 
       - name: 🚀 Run desktop deploy stage
         if: steps.artifact.outputs.found == 'true'
-        run: pnpm tsx scripts/run-ci-stage.ts --stage deploy-desktop
+        run: tsx scripts/run-ci-stage.ts --stage deploy-desktop
 
       - name: ℹ️ No desktop artifact found
         if: steps.artifact.outputs.found != 'true'

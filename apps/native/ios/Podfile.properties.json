@@ -5,6 +5,6 @@
   "expo.jsEngine": "hermes",
   "newArchEnabled": "true",
   "RCT_USE_PREBUILT_RNCORE": "true",
-  "EX_DEV_CLIENT_NETWORK_INSPECTOR": "true",
-  "ios.forceStaticLinking": "[]"
+  "RCT_USE_RN_DEP": "true",
+  "EX_DEV_CLIENT_NETWORK_INSPECTOR": "true"
 }

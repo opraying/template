@@ -222,7 +222,11 @@ export const HttpTransactionLive = HttpApiBuilder.group(PurchaseHttpApi, 'transa
 
           const { transactionId } = path
 
-          yield* Effect.annotateLogsScoped({ namespace, customerId: customerEmail, transactionId })
+          yield* Effect.annotateLogsScoped({
+            namespace,
+            customerId: customerEmail,
+            transactionId,
+          })
 
           const pdfUrl = yield* client.transactions
             .invoiceGeneratePDF({

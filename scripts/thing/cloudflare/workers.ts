@@ -2,7 +2,7 @@ import { FileSystem, Path } from '@effect/platform'
 import { Effect, pipe } from 'effect'
 import type { Unstable_Config } from 'wrangler'
 import type { NodeEnv, Stage } from '../domain'
-import { shellInPath } from '../utils'
+import { shellInPath } from '../utils/shell'
 import { CF } from './api'
 
 const workersUploadBlackList = ['build.json', '.env']
@@ -102,7 +102,7 @@ export const runWorkersDeploy = Effect.fn('cloudflare.workers-deploy')(function*
     $ ${deployCommand}
   `.pipe(Effect.withSpan('cloudflare.deploy'))
 
-  yield* Effect.logDebug('Executing Cloudflare Worker deploy').pipe(Effect.annotateLogs('deployArgs', deployArgs))
+  yield* Effect.logInfo('Executing Cloudflare Worker deploy').pipe(Effect.annotateLogs('deployArgs', deployArgs))
 
   yield* pipe(
     backup,
@@ -131,5 +131,5 @@ export const runWorkersDeploy = Effect.fn('cloudflare.workers-deploy')(function*
     ),
   )
 
-  yield* Effect.logDebug('Cloudflare Workers Deployment created')
+  yield* Effect.logInfo('Cloudflare Workers Deployment created')
 })

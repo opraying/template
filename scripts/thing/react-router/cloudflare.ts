@@ -7,9 +7,9 @@ import { formatSize } from '../cloudflare/utils'
 import { runWorkersDeploy } from '../cloudflare/workers'
 import { parseConfig } from '../cloudflare/wrangler'
 import { Deployment, DeploymentOutput } from '../deployment'
-import { BuildReactRouterParameters } from '../domain'
+import { BuildReactRouterParameters } from './domain'
 import { Git } from '../git'
-import { shellInPath } from '../utils'
+import { shellInPath } from '../utils/shell'
 import { Workspace } from '../workspace'
 
 const make = Effect.gen(function* () {
@@ -366,7 +366,7 @@ const make = Effect.gen(function* () {
       $ rm -rf server
     `.pipe(Effect.withSpan('build.output-cleanup'), Effect.orDie)
 
-    return yield* Effect.logDebug('React router build finished').pipe(
+    return yield* Effect.logInfo('React router build finished').pipe(
       Effect.annotateLogs({
         'client assets size': clientJsAssetsSize.toString(),
         'client sw.js size': clientInfo.swSize,

@@ -30,7 +30,7 @@ export interface SurfaceSelector {
 
 export interface StageSurfaceConfig {
   selectors?: SurfaceSelector[] | undefined
-  defaultToAffected?: boolean
+  defaultToAffected?: boolean | undefined
 }
 
 export interface StageStep {
@@ -48,5 +48,5 @@ export interface StageDefinition {
   prepare?: ((context: StageContext) => void) | undefined
   requiredEnv?: string[] | undefined
   supportedPlatforms?: Platform[] | undefined
-  surface?: StageSurfaceConfig
+  surface?: StageSurfaceConfig | undefined
 }

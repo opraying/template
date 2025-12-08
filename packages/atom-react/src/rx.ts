@@ -234,7 +234,11 @@ const createAtomWrapper: <T extends Atom.Atom<any>>(key: string, atom: T) => any
   }
 
   // Readable, refreshable
-  const proto = { ...getAtomTypeId(atom), ...AtomBaseProto, refresh: AtomWritableProto.refresh.bind(self) }
+  const proto = {
+    ...getAtomTypeId(atom),
+    ...AtomBaseProto,
+    refresh: AtomWritableProto.refresh.bind(self),
+  }
 
   return Object.create(proto, {
     atom: { value: atom, writable: false, enumerable: false, configurable: false },
@@ -352,7 +356,11 @@ export const UseUseServices =
           const typeId = typeIds[prop as keyof typeof typeIds]
 
           if (typeId) {
-            Object.defineProperty(result, xTypeId, { value: typeId, enumerable: true, configurable: false })
+            Object.defineProperty(result, xTypeId, {
+              value: typeId,
+              enumerable: true,
+              configurable: false,
+            })
           }
           return result
         }

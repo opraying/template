@@ -11,7 +11,7 @@
         "{workspaceRoot}/coverage/packages/event-log"
       ],
       "options": {
-        "command": "pnpm xdev test --project pkgs-event-log"
+        "command": "xdev test --project pkgs-event-log"
       }
     },
     "madge": {

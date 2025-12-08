@@ -122,7 +122,9 @@ export class SyncStorageProxyClient extends Context.Tag('@xstack/event-log-serve
         ),
       )
 
-      const rpcClientRef = yield* RpcClient_.makeFetchFromWebsocket(binding.fetch, Client, { rpcPath: config.rpcPath })
+      const rpcClientRef = yield* RpcClient_.makeFetchFromWebsocket(binding.fetch, Client, {
+        rpcPath: config.rpcPath,
+      })
 
       const exec = Effect.fn(
         function* ({ sql, bindings }: { sql: string; bindings: SqlStorageValue[] }) {

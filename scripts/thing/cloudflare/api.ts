@@ -47,7 +47,10 @@ const make = Effect.gen(function* () {
           return CloudflareError.fromApiError(e as APIError)
         }
 
-        return new CloudflareError({ status: 500, errors: [{ code: 500, message: JSON.stringify(e) }] })
+        return new CloudflareError({
+          status: 500,
+          errors: [{ code: 500, message: JSON.stringify(e) }],
+        })
       },
     })
 
@@ -168,7 +171,7 @@ const make = Effect.gen(function* () {
       }),
     ).pipe(Effect.withSpan('cloudflare.createWorkersTmpVersion'))
 
-    yield* Effect.logDebug('Update worker environment variables success')
+    yield* Effect.logInfo('Update worker environment variables success')
 
     return { version: newVersion, worker }
   })
@@ -213,7 +216,7 @@ const make = Effect.gen(function* () {
       .sort((a, b) => (b.number ?? 0) - (a.number ?? 0))
 
     if (apiVersions.length === 0 && sortedNonApiVersions.length <= keepLatest) {
-      yield* Effect.logDebug('cloudflare.cleanup-worker-versions skipped').pipe(
+      yield* Effect.logInfo('cloudflare.cleanup-worker-versions skipped').pipe(
         Effect.annotateLogs({
           workerId,
           keepLatest,
@@ -233,11 +236,11 @@ const make = Effect.gen(function* () {
     const staleVersions = Array.from(staleVersionMap.values())
 
     if (staleVersions.length === 0) {
-      yield* Effect.logDebug('cloudflare.cleanup-worker-versions skipped')
+      yield* Effect.logInfo('cloudflare.cleanup-worker-versions skipped')
       return
     }
 
-    yield* Effect.logDebug('cloudflare.cleanup-worker-versions start').pipe(
+    yield* Effect.logInfo('cloudflare.cleanup-worker-versions start').pipe(
       Effect.annotateLogs({
         workerId,
         keepLatest,
@@ -252,7 +255,7 @@ const make = Effect.gen(function* () {
       (version) =>
         deleteWorkerVersion(workerId, version.id).pipe(
           Effect.zipRight(
-            Effect.logDebug('Deleted worker version').pipe(Effect.annotateLogs({ workerId, versionId: version.id })),
+            Effect.logInfo('Deleted worker version').pipe(Effect.annotateLogs({ workerId, versionId: version.id })),
           ),
           Effect.catchAllCause((cause) => Effect.logWarning('Failed to delete worker version', cause)),
         ),

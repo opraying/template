@@ -139,7 +139,11 @@ class WorkflowIntrospectorInstance {
   mockStepResult(step: Workflows.StepSelector, stepResult: any) {
     return Effect.promise(async () => {
       const ins = await this.getIns()
-      const exit = Schema.ExitFromSelf({ success: Schema.Any, defect: Schema.Defect, failure: Schema.Defect })
+      const exit = Schema.ExitFromSelf({
+        success: Schema.Any,
+        defect: Schema.Defect,
+        failure: Schema.Defect,
+      })
       const encode = Schema.encodeUnknownSync(exit)
       const result = encode(Exit.succeed(stepResult))
 
@@ -637,7 +641,9 @@ const make = (
                       }
                     } catch (error) {
                       console.error('Workflow proxy error:', error)
-                      return Response.json({ error: error instanceof Error ? error.message : 'Unknown error' })
+                      return Response.json({
+                        error: error instanceof Error ? error.message : 'Unknown error',
+                      })
                     }
 
                     return Response.json({ error: `Unknown method: ${method}` })

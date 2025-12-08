@@ -1,6 +1,8 @@
 import { Cause, Effect, Exit, pipe } from 'effect'
 import { Deployment } from '../deployment'
-import { DatabaseMigrateDeploySubcommand, type BuildReactRouterTarget, type DeploySubcommand } from '../domain'
+import type { DeploySubcommand } from '../domain'
+import { DatabaseMigrateDeploySubcommand } from '../database/domain'
+import type { BuildReactRouterTarget } from './domain'
 import { Git } from '../git'
 import { Github } from '../github'
 import { Notification } from '../notification'
@@ -17,7 +19,9 @@ export const start = Effect.fn('react-router.deploy-start')(function* (
   const git = yield* Git
   const github = yield* Github
 
-  const [branch, lastCommit] = yield* Effect.all([git.branch, git.lastCommit], { concurrency: 'unbounded' })
+  const [branch, lastCommit] = yield* Effect.all([git.branch, git.lastCommit], {
+    concurrency: 'unbounded',
+  })
 
   const tags = `React router on ${buildTarget.runtime}`
 
@@ -37,7 +41,7 @@ export const start = Effect.fn('react-router.deploy-start')(function* (
   const fail = (message: string) =>
     Effect.all(
       [
-        Effect.logDebug('Deploy failed'),
+        Effect.logInfo('Deploy failed'),
         notification.failed({
           projectName: workspace.projectName,
           branch,
@@ -121,7 +125,7 @@ export const start = Effect.fn('react-router.deploy-start')(function* (
       return fail(Cause.pretty(cause))
     },
     onSuccess() {
-      return Effect.logDebug('Deploy successful')
+      return Effect.logInfo('Deploy successful')
     },
   })
 })

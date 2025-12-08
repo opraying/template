@@ -104,7 +104,9 @@ export class EventLogDaemon extends Effect.Service<EventLogDaemon>()('EventLogDa
       Stream.debounce('100 millis'),
       Stream.filter((socketOnline) => !!socketOnline),
       Stream.tap(() => Effect.logTrace('Socket online, starting periodic remote stats fetch')),
-      Stream.flatMap(() => Stream.fromSchedule(Schedule.spaced(syncRemoteStatsInterval)), { switch: true }),
+      Stream.flatMap(() => Stream.fromSchedule(Schedule.spaced(syncRemoteStatsInterval)), {
+        switch: true,
+      }),
       Stream.filterEffect(() => isOnlinePredicate()),
       Stream.mapEffect(() => updateRemoteSyncStats),
       Stream.runDrain,

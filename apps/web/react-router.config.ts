@@ -6,6 +6,6 @@ export default {
   buildDirectory: '../../dist/template/web',
   future: {
     unstable_optimizeDeps: true,
-    unstable_splitRouteModules: 'enforce',
+    v8_splitRouteModules: 'enforce',
   },
 } satisfies Config

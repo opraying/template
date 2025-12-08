@@ -1,0 +1,128 @@
+name: ⚡ Deploy Native Update
+
+on:
+  push:
+    branches:
+      - main
+      - staging
+      - test
+      - 'feat-*'
+  workflow_dispatch:
+    inputs:
+      env:
+        description: 'Override update environment (production|staging|test|preview)'
+        required: false
+      branch:
+        description: 'Override version branch for publishing'
+        required: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: native-update-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  classify:
+    name: Determine JS update eligibility
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    outputs:
+      should_publish: ${{ steps.decide.outputs.should_publish }}
+      update_env: ${{ steps.decide.outputs.update_env }}
+      version_branch: ${{ steps.decide.outputs.version_branch }}
+      git_branch: ${{ steps.decide.outputs.git_branch }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: ./.github/actions/setup
+      - id: branch
+        run: tsx scripts/ci/check-version-branch.ts --github
+      - name: Detect surfaces
+        id: detect
+        run: tsx scripts/ci/detect-surfaces.ts --surfaces native-ios,native-android --format json > detection.json
+      - name: Fingerprint ios
+        id: ios
+        shell: bash
+        run: |
+          set -euo pipefail
+          tsx scripts/ci/native-fingerprint.ts --platform ios --output fingerprint-ios.json > /dev/null
+          echo "requires=$(jq -r '.requiresStoreRelease' fingerprint-ios.json)" >> "$GITHUB_OUTPUT"
+      - name: Fingerprint android
+        id: android
+        shell: bash
+        run: |
+          set -euo pipefail
+          tsx scripts/ci/native-fingerprint.ts --platform android --output fingerprint-android.json > /dev/null
+          echo "requires=$(jq -r '.requiresStoreRelease' fingerprint-android.json)" >> "$GITHUB_OUTPUT"
+      - name: Decide JS update
+        id: decide
+        shell: bash
+        run: |
+          set -euo pipefail
+          affected=$(jq -r '.affectedProjects[]?' detection.json)
+          template_changed=false
+          while read -r project; do
+            if [[ "$project" == 'template-native' ]]; then
+              template_changed=true
+              break
+            fi
+          done <<< "$affected"
+          ios_requires='${{ steps.ios.outputs.requires }}'
+          android_requires='${{ steps.android.outputs.requires }}'
+          should_publish=false
+          if [[ "$template_changed" == true && "$ios_requires" != 'true' && "$android_requires" != 'true' ]]; then
+            should_publish=true
+          fi
+          git_branch='${{ steps.branch.outputs['git-branch'] || github.ref_name }}'
+          version_branch='${{ steps.branch.outputs['version-branch'] }}'
+          if [[ -z "$version_branch" ]]; then
+            version_branch='${{ github.ref_name }}'
+          fi
+          env='preview'
+          case "$git_branch" in
+            main) env='production' ;;
+            staging) env='staging' ;;
+            test) env='test' ;;
+            feat-*) env='preview' ;;
+            version-*) env='staging' ;;
+          esac
+          if [[ -n "${{ github.event.inputs.env }}" ]]; then
+            env='${{ github.event.inputs.env }}'
+          fi
+          if [[ -n "${{ github.event.inputs.branch }}" ]]; then
+            version_branch='${{ github.event.inputs.branch }}'
+          fi
+          echo "should_publish=${should_publish}" >> "$GITHUB_OUTPUT"
+          echo "update_env=${env}" >> "$GITHUB_OUTPUT"
+          echo "version_branch=${version_branch}" >> "$GITHUB_OUTPUT"
+          echo "git_branch=${git_branch}" >> "$GITHUB_OUTPUT"
+          printf 'Resolved git=%s -> version=%s (%s env)\n' "$git_branch" "$version_branch" "$env"
+      - uses: actions/upload-artifact@v5
+        if: always()
+        with:
+          name: js-update-diagnostics
+          path: |
+            detection.json
+            fingerprint-ios.json
+            fingerprint-android.json
+          retention-days: 3
+
+  publish:
+    name: Publish JS update
+    runs-on: ubuntu-latest
+    needs: classify
+    if: needs.classify.outputs.should_publish == 'true' && github.secret_source != 'None'
+    timeout-minutes: 30
+    env:
+      JS_UPDATE_ENV: ${{ needs.classify.outputs.update_env }}
+      VERSION_BRANCH: ${{ needs.classify.outputs.version_branch || github.ref_name }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: ./.github/actions/setup
+      - name: 🚀 Publish update
+        run: tsx scripts/run-ci-stage.ts --stage js-update --platform linux

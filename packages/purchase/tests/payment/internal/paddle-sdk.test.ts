@@ -92,7 +92,10 @@ it.layer(TestPaddle)('Paddle SDK', ({ effect }) => {
 
         const email = 'test2@test.com'
 
-        const res = yield* sdk.customers.update({ customerId: 'ctm_01jp7k30m8xfvsv10y4mq9gxnm', email })
+        const res = yield* sdk.customers.update({
+          customerId: 'ctm_01jp7k30m8xfvsv10y4mq9gxnm',
+          email,
+        })
         console.log(res)
       }),
     )
@@ -112,7 +115,9 @@ it.layer(TestPaddle)('Paddle SDK', ({ effect }) => {
       Effect.gen(function* () {
         const sdk = yield* Paddle.PaddleSdk
 
-        const res = yield* sdk.transactions.get({ transactionId: 'txn_01jgkdz3wztdj93nq84xaq73fy1' })
+        const res = yield* sdk.transactions.get({
+          transactionId: 'txn_01jgkdz3wztdj93nq84xaq73fy1',
+        })
         console.log(res)
       }),
     )
@@ -132,7 +137,9 @@ it.layer(TestPaddle)('Paddle SDK', ({ effect }) => {
       Effect.gen(function* () {
         const sdk = yield* Paddle.PaddleSdk
 
-        const res = yield* sdk.subscriptions.get({ subscriptionId: 'sub_01jc66wby1xh91gz2azjebwa4a' })
+        const res = yield* sdk.subscriptions.get({
+          subscriptionId: 'sub_01jc66wby1xh91gz2azjebwa4a',
+        })
         console.log(res)
       }),
     )
@@ -141,7 +148,9 @@ it.layer(TestPaddle)('Paddle SDK', ({ effect }) => {
       Effect.gen(function* () {
         const sdk = yield* Paddle.PaddleSdk
 
-        const res = yield* sdk.subscriptions.cancel({ subscriptionId: 'sub_01jc66wby1xh91gz2azjebwa4a' })
+        const res = yield* sdk.subscriptions.cancel({
+          subscriptionId: 'sub_01jc66wby1xh91gz2azjebwa4a',
+        })
         console.log(res)
       }),
     )

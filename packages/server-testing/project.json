@@ -11,7 +11,7 @@
         "{workspaceRoot}/coverage/packages/server-testing"
       ],
       "options": {
-        "command": "pnpm xdev test --project pkgs-server-testing"
+        "command": "xdev test --project pkgs-server-testing"
       }
     },
     "madge": {

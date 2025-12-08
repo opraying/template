@@ -8,33 +8,33 @@
       "executor": "nx:run-commands",
       "outputs": ["{workspaceRoot}/dist/apps/server"],
       "options": {
-        "command": "pnpm xdev build --cwd apps/server"
+        "command": "xdev build --cwd apps/server"
       }
     },
     "app-deploy": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "pnpm xdev deploy --cwd apps/server"
+        "command": "xdev deploy --cwd apps/server"
       }
     },
     "serve": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "pnpm xdev serve --cwd apps/server"
+        "command": "xdev serve --cwd apps/server"
       }
     },
     "preview": {
       "dependsOn": ["app-build"],
       "executor": "nx:run-commands",
       "options": {
-        "command": "pnpm xdev --tsconfig=apps/server/tsconfig.app.json preview --cwd apps/server"
+        "command": "xdev --tsconfig=apps/server/tsconfig.app.json preview --cwd apps/server"
       }
     },
     "test": {
       "executor": "nx:run-commands",
       "outputs": ["{workspaceRoot}/node_modules/.vitest/apps/server", "{workspaceRoot}/coverage/apps/server"],
       "options": {
-        "command": "pnpm xdev test --project template-server"
+        "command": "xdev test --project template-server"
       }
     },
     "madge": {
@@ -55,28 +55,28 @@
       "defaultConfiguration": "seed",
       "configurations": {
         "seed": {
-          "command": "pnpm xdev db seed --cwd apps/server"
+          "command": "xdev db seed --cwd apps/server"
         },
         "push": {
-          "command": "pnpm xdev db push --cwd apps/server"
+          "command": "xdev db push --cwd apps/server"
         },
         "dump": {
-          "command": "pnpm xdev db dump --cwd apps/server"
+          "command": "xdev db dump --cwd apps/server"
         },
         "execute": {
-          "command": "pnpm xdev db execute --cwd apps/server"
+          "command": "xdev db execute --cwd apps/server"
         },
         "dev": {
-          "command": "pnpm xdev db migrate dev --cwd apps/server"
+          "command": "xdev db migrate dev --cwd apps/server"
         },
         "reset": {
-          "command": "pnpm xdev db migrate reset --cwd apps/server"
+          "command": "xdev db migrate reset --cwd apps/server"
         },
         "deploy": {
-          "command": "pnpm xdev db migrate deploy --cwd apps/server"
+          "command": "xdev db migrate deploy --cwd apps/server"
         },
         "resolve": {
-          "command": "pnpm xdev db migrate resolve --cwd apps/server"
+          "command": "xdev db migrate resolve --cwd apps/server"
         }
       }
     }

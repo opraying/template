@@ -1,3 +1,9 @@
 [submodule ".repo/effect"]
 	path = .repo/effect
 	url = https://github.com/Effect-TS/effect
+[submodule ".repo/hot-updater"]
+	path = .repo/hot-updater
+	url = https://github.com/gronxb/hot-updater
+[submodule ".repo/expo-github-action"]
+	path = .repo/expo-github-action
+	url = https://github.com/expo/expo-github-action

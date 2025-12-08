@@ -2,19 +2,26 @@ import { STAGES } from './stages'
 import type { StageSurfaceConfig, SurfaceSelector } from './types'
 import { git, nx } from './utils'
 
-export type SurfaceName = string
+type SurfaceName = string
 
-export interface SurfaceResult {
+interface SurfaceResult {
   name: SurfaceName
   impacted: boolean
   matches: string[]
-  description?: string
+  description?: string | undefined
 }
 
-export interface SurfaceDetectionOptions {
-  surfaces?: SurfaceName[]
-  base?: string
-  head?: string
+interface SurfaceDetectionOptions {
+  surfaces?: SurfaceName[] | undefined
+  base?: string | undefined
+  head?: string | undefined
+}
+
+interface ProjectMeta {
+  name: string
+  root: string
+  tags: string[]
+  projectType?: string | undefined
 }
 
 export interface SurfaceDetectionPayload {
@@ -26,9 +33,9 @@ export interface SurfaceDetectionPayload {
   projectMeta: Record<string, ProjectMeta>
 }
 
-type SurfaceConfig = StageSurfaceConfig & { description?: string }
+type SurfaceConfig = StageSurfaceConfig & { description?: string | undefined }
 
-export const SURFACE_DEFINITIONS: Record<SurfaceName, SurfaceConfig> = Object.fromEntries(
+const SURFACE_DEFINITIONS: Record<SurfaceName, SurfaceConfig> = Object.fromEntries(
   Object.entries(STAGES)
     .filter(([, stage]) => stage.surface)
     .map(([name, stage]) => [
@@ -41,7 +48,7 @@ export const SURFACE_DEFINITIONS: Record<SurfaceName, SurfaceConfig> = Object.fr
     ]),
 )
 
-export function getSurfaceNames() {
+function getSurfaceNames() {
   return Object.keys(SURFACE_DEFINITIONS)
 }
 
@@ -54,10 +61,9 @@ export function detectSurfaces(options: SurfaceDetectionOptions = {}): SurfaceDe
     return name
   })
   const head = resolveHead(options.head)
-  const base = resolveBase(head, options.base)
+  const base = process.env.CI ? resolveBase(head, options.base) : resolveLocalBase(head, options.base)
   const changedFiles = collectChangedFiles(base, head)
-  const affectedRaw = nx(['show', 'projects', '--affected', `--base=${base}`, `--head=${head}`, '--json'])
-  const affectedProjects = JSON.parse(affectedRaw) as string[]
+  const affectedProjects = getAffectedProjects({ base, head, files: changedFiles })
   const projectMeta = loadProjectMeta(affectedProjects)
   const results = surfacesToCheck.map((name) =>
     evaluateSurface(name, SURFACE_DEFINITIONS[name], affectedProjects, projectMeta, affectedProjects.length),
@@ -72,13 +78,13 @@ export function detectSurfaces(options: SurfaceDetectionOptions = {}): SurfaceDe
   }
 }
 
-function resolveHead(headOverride?: string) {
+export function resolveHead(headOverride?: string | undefined) {
   if (headOverride) return headOverride
   if (process.env.NX_HEAD) return process.env.NX_HEAD
   return git(['rev-parse', 'HEAD'])
 }
 
-function resolveBase(head: string, baseOverride?: string) {
+export function resolveBase(head: string, baseOverride?: string | undefined) {
   if (baseOverride) return baseOverride
   if (process.env.NX_BASE) return process.env.NX_BASE
   const mainBranch = process.env.NX_MAIN_BRANCH ?? 'main'
@@ -98,9 +104,48 @@ function resolveBase(head: string, baseOverride?: string) {
   return git(['rev-parse', head])
 }
 
-function collectChangedFiles(base: string, head: string) {
+function resolveLocalBase(head: string, baseOverride?: string | undefined) {
+  const override = baseOverride ?? process.env.NX_BASE
+  if (override) {
+    return override
+  }
+  const branch = getCurrentBranchName()
+  if (branch && branch !== 'HEAD') {
+    const remoteHead = getRemoteBranchSha(branch)
+    if (remoteHead) {
+      return remoteHead
+    }
+  }
+  return resolveBase(head)
+}
+
+function getCurrentBranchName() {
+  try {
+    return git(['rev-parse', '--abbrev-ref', 'HEAD'])
+  } catch {
+    return 'HEAD'
+  }
+}
+
+function getRemoteBranchSha(branch: string) {
+  try {
+    const output = git(['ls-remote', '--exit-code', '--heads', 'origin', branch])
+    const lines = commitmentToArray(output)
+    if (lines.length === 0) {
+      return undefined
+    }
+    const [sha] = lines[0].split('\t')
+    return sha?.trim() ?? undefined
+  } catch {
+    return undefined
+  }
+}
+
+export function collectChangedFiles(base: string, head: string) {
   const sets: Array<Set<string>> = []
-  const committed = git(['diff', '--name-only', `${base}...${head}`])
+  const diffRange = process.env.CI ? 'triple-dot' : 'double-dot'
+  const args = diffRange === 'double-dot' ? [base, head] : [`${base}...${head}`]
+  const committed = git(['diff', '--name-only', ...args])
   sets.push(new Set(commitmentToArray(committed)))
   try {
     const staged = git(['diff', '--name-only', '--cached'])
@@ -136,11 +181,17 @@ function commitmentToArray(value: string) {
     .filter(Boolean)
 }
 
-export interface ProjectMeta {
-  name: string
-  root: string
-  tags: string[]
-  projectType?: string
+function getAffectedProjects(options: { base: string; head: string; files: string[] }): string[] {
+  if (process.env.CI) {
+    const raw = nx(['show', 'projects', '--affected', `--base=${options.base}`, `--head=${options.head}`, '--json'])
+    return JSON.parse(raw) as string[]
+  }
+  if (options.files.length === 0) {
+    return []
+  }
+  const filesArg = options.files.join(',')
+  const raw = nx(['show', 'projects', '--affected', '--files', filesArg, '--json'])
+  return JSON.parse(raw) as string[]
 }
 
 function loadProjectMeta(projectNames: string[]): Map<string, ProjectMeta> {

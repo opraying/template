@@ -109,8 +109,12 @@ export class LanguageDetector {
 
   private fromSupported(language: string | null) {
     return (
-      pick(this.options.supportedLanguages, language ?? this.options.fallbackLanguage, { loose: false }) ||
-      pick(this.options.supportedLanguages, language ?? this.options.fallbackLanguage, { loose: true })
+      pick(this.options.supportedLanguages, language ?? this.options.fallbackLanguage, {
+        loose: false,
+      }) ||
+      pick(this.options.supportedLanguages, language ?? this.options.fallbackLanguage, {
+        loose: true,
+      })
     )
   }
 }

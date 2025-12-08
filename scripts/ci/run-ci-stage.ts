@@ -1,17 +1,19 @@
 import { spawnSync } from 'node:child_process'
 import path from 'node:path'
-
 import { STAGES } from './stages'
 import type { Platform, StageContext } from './types'
 import { detectSurfaces } from './surface-detector'
-import { ensureEnvVars, repoRoot } from './utils'
+import { ensureEnvVars } from './utils'
+import { workspaceRoot } from '@nx/devkit'
 
 interface StageOptions {
-  stage?: string
-  platform?: Platform
-  dryRun?: boolean
-  list?: boolean
-  help?: boolean
+  stage?: string | undefined
+  platform?: Platform | undefined
+  base?: string | undefined
+  head?: string | undefined
+  dryRun?: boolean | undefined
+  list?: boolean | undefined
+  help?: boolean | undefined
 }
 
 function parseArgs(argv: string[]): StageOptions {
@@ -24,6 +26,12 @@ function parseArgs(argv: string[]): StageOptions {
         break
       case '--platform':
         options.platform = normalizePlatform(expectValue('--platform', argv[++i]))
+        break
+      case '--base':
+        options.base = expectValue('--base', argv[++i])
+        break
+      case '--head':
+        options.head = expectValue('--head', argv[++i])
         break
       case '--dry-run':
         options.dryRun = true
@@ -86,17 +94,26 @@ function detectHostPlatform(): Platform {
 }
 
 function printHelp() {
-  console.log(`Usage: pnpm tsx scripts/run-ci-stage.ts --stage <name> [options]
+  console.log(`Usage: scripts/run-ci-stage.ts --stage <name> [options]
 
 Options:
   --stage <name>        Stage to run (${Object.keys(STAGES).join(', ')})
   --platform <value>    linux | macos | windows (defaults to host platform)
+  --base <sha>          Override git base commit (defaults to merge-base of main)
+  --head <sha>          Override git head commit (defaults to HEAD)
   --dry-run             Print the commands without executing them
   --list                List available stages
   -h, --help            Show this message`)
 }
 
-function runStage(stageName: string, platform: Platform, dryRun: boolean) {
+function runStage(options: {
+  stage: string
+  platform: Platform
+  base?: string | undefined
+  head?: string | undefined
+  dryRun: boolean
+}) {
+  const { platform, stage: stageName, dryRun } = options
   const stage = STAGES[stageName]
   if (!stage) {
     throw new Error(`Unknown stage "${stageName}". Use --list to inspect options.`)
@@ -114,10 +131,16 @@ function runStage(stageName: string, platform: Platform, dryRun: boolean) {
   }
   const detection = detectSurfaces({
     surfaces: stage.surface ? [stageName] : undefined,
+    base: options.base,
+    head: options.head,
   })
-  console.log(
-    `Detected ${detection.affectedProjects.length} affected Nx project(s) between ${detection.base.slice(0, 7)}...${detection.head.slice(0, 7)}`,
-  )
+  if (detection.base === detection.head) {
+    console.log(`Detected ${detection.affectedProjects.length} affected projects with local changes`)
+  } else {
+    console.log(
+      `Detected ${detection.affectedProjects.length} affected projects between ${detection.base.slice(0, 7)}...${detection.head.slice(0, 7)}`,
+    )
+  }
   const context: StageContext = {
     ci: {
       base: detection.base,
@@ -143,7 +166,7 @@ function runStage(stageName: string, platform: Platform, dryRun: boolean) {
       continue
     }
     const result = spawnSync(step.command, args, {
-      cwd: cwdOption ? path.resolve(repoRoot, cwdOption) : repoRoot,
+      cwd: cwdOption ? path.resolve(workspaceRoot, cwdOption) : workspaceRoot,
       stdio: 'inherit',
       env: { ...process.env, ...envOption },
     })
@@ -176,7 +199,13 @@ function main() {
       process.exit(1)
     }
     const platform = options.platform ?? detectHostPlatform()
-    runStage(options.stage, platform, Boolean(options.dryRun))
+    runStage({
+      stage: options.stage,
+      platform,
+      base: options.base,
+      head: options.head,
+      dryRun: Boolean(options.dryRun),
+    })
   } catch (error) {
     console.error(error instanceof Error ? error.message : error)
     process.exit(1)

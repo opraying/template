@@ -8,7 +8,7 @@
       "executor": "nx:run-commands",
       "outputs": ["{workspaceRoot}/node_modules/.vitest/apps/client", "{workspaceRoot}/coverage/apps/client"],
       "options": {
-        "command": "pnpm xdev test --project template-client"
+        "command": "xdev test --project template-client"
       }
     },
     "madge": {
@@ -23,28 +23,28 @@
       "defaultConfiguration": "seed",
       "configurations": {
         "seed": {
-          "command": "pnpm xdev db seed --cwd apps/client"
+          "command": "xdev db seed --cwd apps/client"
         },
         "push": {
-          "command": "pnpm xdev db push --cwd apps/client"
+          "command": "xdev db push --cwd apps/client"
         },
         "dump": {
-          "command": "pnpm xdev db dump --cwd apps/client"
+          "command": "xdev db dump --cwd apps/client"
         },
         "execute": {
-          "command": "pnpm xdev db execute --cwd apps/client"
+          "command": "xdev db execute --cwd apps/client"
         },
         "dev": {
-          "command": "pnpm xdev db migrate dev --cwd apps/client"
+          "command": "xdev db migrate dev --cwd apps/client"
         },
         "reset": {
-          "command": "pnpm xdev db migrate reset --cwd apps/client"
+          "command": "xdev db migrate reset --cwd apps/client"
         },
         "deploy": {
-          "command": "pnpm xdev db migrate deploy --cwd apps/client"
+          "command": "xdev db migrate deploy --cwd apps/client"
         },
         "resolve": {
-          "command": "pnpm xdev db migrate resolve --cwd apps/client"
+          "command": "xdev db migrate resolve --cwd apps/client"
         }
       }
     }

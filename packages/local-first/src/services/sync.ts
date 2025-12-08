@@ -74,7 +74,9 @@ const useSyncService = UseUseServices(
 
   const syncing = runtime.atom(Stream.unwrap(SyncService.syncing), { initialValue: false })
 
-  const socketStatus = runtime.atom(Stream.unwrap(SyncService.socketStatusStream), { initialValue: Option.none() })
+  const socketStatus = runtime.atom(Stream.unwrap(SyncService.socketStatusStream), {
+    initialValue: Option.none(),
+  })
 
   const remoteSyncStats = runtime.atom(Stream.unwrap(SyncService.remoteSyncStatsStream), {
     initialValue: Option.none(),

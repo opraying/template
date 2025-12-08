@@ -11,14 +11,14 @@ import type {
 } from '../domain'
 import { BuildWorkersParameters } from '../domain'
 import * as Environment from '../environment'
-import { shell } from '../utils'
+import { shell } from '../utils/shell'
 import * as Workspace from '../workspace'
 
 export const serve = Effect.fn('workers.serve')(function* (
   workspace: Workspace.Workspace,
   subcommand: ServeSubcommand,
 ) {
-  yield* Effect.logDebug(`Serve ${workspace.projectName}`)
+  yield* Effect.logInfo(`Serve ${workspace.projectName}`)
 
   if (subcommand.target._tag !== 'BuildWorkers') {
     return yield* Effect.dieMessage('Invalid target')
@@ -61,7 +61,7 @@ export const build = Effect.fn('workers.build')(function* (
   const fs = yield* FileSystem.FileSystem
   const path = yield* Path.Path
 
-  yield* Effect.logDebug('Start building app')
+  yield* Effect.logInfo('Start building app')
 
   if (subcommand.target._tag !== 'BuildWorkers') {
     return yield* Effect.dieMessage('Invalid target')
@@ -99,7 +99,7 @@ export const build = Effect.fn('workers.build')(function* (
   )
 
   yield* pipe(
-    Effect.logDebug('Clean dist folder'),
+    Effect.logInfo('Clean dist folder'),
     Effect.andThen(
       shell`
         $ rm -rf ${workspace.projectOutput.dist}
@@ -135,7 +135,7 @@ export const deploy = Effect.fn('workers.deploy')(function* (
   subcommand: DeploySubcommand,
   buildTarget: BuildTarget,
 ) {
-  yield* Effect.logDebug(`Deploy ${workspace.projectName}`)
+  yield* Effect.logInfo(`Deploy ${workspace.projectName}`)
 
   if (buildTarget._tag !== 'BuildWorkers') {
     return yield* Effect.dieMessage('Invalid build target')
@@ -155,7 +155,11 @@ export const deploy = Effect.fn('workers.deploy')(function* (
     Layer.succeed(Workspace.Workspace, workspace),
     Layer.succeed(
       BuildWorkersParameters,
-      BuildWorkersParameters.of({ env: environment.env, target: buildTarget, nodeEnv: 'production' }),
+      BuildWorkersParameters.of({
+        env: environment.env,
+        target: buildTarget,
+        nodeEnv: 'production',
+      }),
     ),
   )
   const DeployLive = Layer.provideMerge(WorkersOnCloudflareLive, Base)
@@ -174,7 +178,7 @@ export const preview = Effect.fn('workers.preview')(function* (
   subcommand: PreviewSubcommand,
   buildTarget: BuildTarget,
 ) {
-  yield* Effect.logDebug(`Preview ${workspace.projectName}`)
+  yield* Effect.logInfo(`Preview ${workspace.projectName}`)
 
   if (buildTarget._tag !== 'BuildWorkers') {
     return yield* Effect.dieMessage('Invalid build target')
@@ -186,7 +190,11 @@ export const preview = Effect.fn('workers.preview')(function* (
     Layer.succeed(Workspace.Workspace, workspace),
     Layer.succeed(
       BuildWorkersParameters,
-      BuildWorkersParameters.of({ env: environment.env, target: buildTarget, nodeEnv: 'production' }),
+      BuildWorkersParameters.of({
+        env: environment.env,
+        target: buildTarget,
+        nodeEnv: 'production',
+      }),
     ),
   )
 

@@ -56,9 +56,13 @@ export function updateSessionStatus({
   if (Globals.recentActivity || forceActivity) {
     sessionState.expiresAt = Date.now() + SESSION_INACTIVITY_TIMEOUT_MS
     if (useLocalStorage) {
-      setSessionStateToLocalStorage(sessionState, { forceStoreWrite: shouldForceWrite || forceStore })
+      setSessionStateToLocalStorage(sessionState, {
+        forceStoreWrite: shouldForceWrite || forceStore,
+      })
     } else {
-      renewCookieTimeout(sessionState, cookieDomain, { forceStoreWrite: shouldForceWrite || forceStore })
+      renewCookieTimeout(sessionState, cookieDomain, {
+        forceStoreWrite: shouldForceWrite || forceStore,
+      })
     }
   }
 
@@ -73,7 +77,10 @@ export function initSessionTracking(domain?: string, useLocalStorage = true) {
   }
 
   ACTIVITY_EVENTS.forEach((type) =>
-    document.addEventListener(type, () => Globals.setRecentActivity(true), { capture: true, passive: true }),
+    document.addEventListener(type, () => Globals.setRecentActivity(true), {
+      capture: true,
+      passive: true,
+    }),
   )
 
   updateSessionStatus({ useLocalStorage, forceStore: true })

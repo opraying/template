@@ -50,8 +50,8 @@ export function init() {
         document,
         // <StrictMode>
         <HydratedRouter />,
-        // </StrictMode>,
       )
+      // </StrictMode>,
     })
   } else {
     let data: any
@@ -70,8 +70,8 @@ export function init() {
     root.render(
       // <StrictMode>
       <HydratedRouter />,
-      // </StrictMode>,
     )
+    // </StrictMode>,
   }
 }
 

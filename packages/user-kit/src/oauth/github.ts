@@ -61,7 +61,11 @@ export class GithubOAuthProvider extends Context.Tag('@userkit:oauth:github-prov
           Effect.flatMap(({ github, state }) => {
             const url = Effect.try({
               try: () => github.createAuthorizationURL(state, ['user:email']),
-              catch: (error) => new OAuthInternalError({ message: 'OAuth get authorization url error', cause: error }),
+              catch: (error) =>
+                new OAuthInternalError({
+                  message: 'OAuth get authorization url error',
+                  cause: error,
+                }),
             }).pipe(Effect.map((url) => url.toString()))
 
             return Effect.all({
@@ -80,7 +84,11 @@ export class GithubOAuthProvider extends Context.Tag('@userkit:oauth:github-prov
             Effect.tryPromise({
               try: () => github.validateAuthorizationCode(code),
               catch: (error) =>
-                new OAuthAppError({ message: 'OAuth callback error', cause: error, reason: 'invalid-code' }),
+                new OAuthAppError({
+                  message: 'OAuth callback error',
+                  cause: error,
+                  reason: 'invalid-code',
+                }),
             }).pipe(Effect.withSpan('oauth.github.validateAuthorizationCode')),
           ),
           Effect.bind('response', ({ tokens }) =>

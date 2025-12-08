@@ -380,7 +380,9 @@ export abstract class SyncDurableServer extends EventLogDurableObject {
     return Effect.gen(this, function* () {
       const client = yield* SyncAgentClient
 
-      yield* Effect.forEach(changes, (chunk) => client.write(this.remoteId, chunk), { discard: true })
+      yield* Effect.forEach(changes, (chunk) => client.write(this.remoteId, chunk), {
+        discard: true,
+      })
 
       // only dev, broadcast changes to nodejs
       // yield* Effect.promise(() => fetch("http://localhost:9995/sync", { method: "post", body: changes[0] })).pipe(

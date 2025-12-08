@@ -107,7 +107,7 @@ export const useAtomInitialValues = (initialValues: Iterable<readonly [Atom.Atom
  * @category hooks
  */
 export const useAtomValue: {
-  <A>(atom: Atom.Atom<A>): A
+  <A>(atom: Atom.Atom<A>): A;
   <A, B>(atom: Atom.Atom<A>, f: (_: A) => B): B
 } = <A>(atom: Atom.Atom<A>, f?: (_: A) => A): A => {
   const registry = React.use(RegistryContext)
@@ -138,7 +138,9 @@ function setAtom<R, W, Mode extends 'value' | 'promise' | 'promiseExit' = never>
       (value: W) => {
         registry.set(atom, value)
         const promise = Effect.runPromiseExit(
-          Registry.getResult(registry, atom as Atom.Atom<Result.Result<any, any>>, { suspendOnWaiting: true }),
+          Registry.getResult(registry, atom as Atom.Atom<Result.Result<any, any>>, {
+            suspendOnWaiting: true,
+          }),
         )
         return options!.mode === 'promise' ? promise.then(flattenExit) : promise
       },
@@ -377,9 +379,9 @@ export const atomHooks: {
     type?: 'value',
     option?: never,
   ): {
-    (): A
+    (): A;
     <B>(f: (_: A) => B): B
-  }
+  };
   <A, const IncludeFailure extends boolean = false>(
     atom: Atom.Atom<A>,
     type: 'suspense',

@@ -1,6 +1,6 @@
 import { ConfigProvider, Effect } from 'effect'
 import { describe, expect, it } from '@effect/vitest'
-import { Git } from '../git'
+import { Git, branchToNativeChannel } from '../git'
 
 describe('git', () => {
   it('local', () => {
@@ -42,5 +42,30 @@ describe('git', () => {
     const main = program.pipe(Effect.provide(Git.Default), Effect.withConfigProvider(provider))
 
     return Effect.runPromise(main)
+  })
+})
+
+describe('branchToNativeChannel', () => {
+  it('keeps main/staging/test channels without env prefixing', () => {
+    expect(branchToNativeChannel('main', 'staging')).toBe('main')
+    expect(branchToNativeChannel('staging', 'production')).toBe('staging')
+    expect(branchToNativeChannel('test', 'production')).toBe('test')
+  })
+
+  it('maps feature branches to feat-*', () => {
+    expect(branchToNativeChannel('feat/native/ui')).toBe('feat-native-ui')
+  })
+
+  it('detects PR refs and maps to preview channels', () => {
+    expect(branchToNativeChannel('refs/pull/42/head')).toBe('preview/pr-42')
+    expect(branchToNativeChannel('pr/amazing-change')).toBe('preview/amazing-change')
+  })
+
+  it('falls back to env-prefixed channel for other branches', () => {
+    expect(branchToNativeChannel('feature/native/rework', 'Staging')).toBe('staging-feature-native-rework')
+  })
+
+  it('defaults to main when empty', () => {
+    expect(branchToNativeChannel('///', 'production')).toBe('production-main')
   })
 })

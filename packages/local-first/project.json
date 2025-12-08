@@ -11,7 +11,7 @@
         "{workspaceRoot}/coverage/packages/local-first"
       ],
       "options": {
-        "command": "pnpm xdev test --project pkgs-local-first"
+        "command": "xdev test --project pkgs-local-first"
       }
     },
     "madge": {

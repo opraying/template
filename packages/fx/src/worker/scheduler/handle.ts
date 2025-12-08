@@ -53,9 +53,10 @@ abstract class RemoteResource {
   }
 }
 
-export class ResourcePlan<A extends Effect.Effect<void, any, any>, B extends Effect.Effect<void, any, any>>
-  implements Plan
-{
+export class ResourcePlan<
+  A extends Effect.Effect<void, any, any>,
+  B extends Effect.Effect<void, any, any>,
+> implements Plan {
   readonly name: string
   readonly commands: CommandRequestHandle<any>[]
   readonly events: EventRequestHandle<any>[]

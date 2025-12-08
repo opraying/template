@@ -8,7 +8,9 @@ export const eventQueryCount = Metric.counter('event.query.count', {
   incremental: true,
 })
 
-export const eventQueryLatency = Metric.gauge('event.query.latency.ms', { description: 'Event query latency' })
+export const eventQueryLatency = Metric.gauge('event.query.latency.ms', {
+  description: 'Event query latency',
+})
 
 export const eventWriteCount = Metric.counter('event.write.count', {
   description: 'Events written count',
@@ -21,7 +23,9 @@ export const eventWriteMessageSize = Metric.histogram(
   'Write Msg size',
 )
 
-export const eventWriteLatency = Metric.gauge('event.write.latency.ms', { description: 'Event write latency' })
+export const eventWriteLatency = Metric.gauge('event.write.latency.ms', {
+  description: 'Event write latency',
+})
 
 export const eventWriteErrorCount = Metric.counter('event.write.error.count', {
   description: 'Event write errors',
@@ -74,14 +78,18 @@ export const syncLatency = Metric.gauge('event.sync.latency.ms', { description: 
 
 // Encrypt/Decrypt
 
-export const encryptionLatency = Metric.gauge('event.encryption.latency.ms', { description: 'Encryption latency' })
+export const encryptionLatency = Metric.gauge('event.encryption.latency.ms', {
+  description: 'Encryption latency',
+})
 
 export const encryptionCount = Metric.counter('event.encryption.count', {
   description: 'Encryption count',
   incremental: true,
 })
 
-export const decryptionLatency = Metric.gauge('event.decryption.latency.ms', { description: 'Decryption latency' })
+export const decryptionLatency = Metric.gauge('event.decryption.latency.ms', {
+  description: 'Decryption latency',
+})
 
 export const decryptionCount = Metric.counter('event.decryption.count', {
   description: 'Decryption count',

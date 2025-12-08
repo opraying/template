@@ -1,8 +1,9 @@
 import { FileSystem } from '@effect/platform'
 import { Effect, pipe } from 'effect'
 import { Deployment } from '../deployment'
-import { BuildReactRouterParameters, type BuildSubcommand } from '../domain'
-import { shell, shellEnv, shellInPath } from '../utils'
+import { type BuildSubcommand } from '../domain'
+import { BuildReactRouterParameters } from './domain'
+import { shell, shellInPath } from '../utils/shell'
 import { Workspace } from '../workspace'
 import { fixPwaSwScript } from './scripts'
 
@@ -13,7 +14,7 @@ export const start = Effect.fn('react-router.build-start')(function* (subcommand
     return yield* Effect.dieMessage('Invalid provider')
   }
 
-  yield* Effect.logDebug('React router build started')
+  yield* Effect.logInfo('React router build started')
 
   const fs = yield* FileSystem.FileSystem
   const parameters = yield* BuildReactRouterParameters
@@ -34,7 +35,7 @@ export const start = Effect.fn('react-router.build-start')(function* (subcommand
 
   if (isSpaMode || isDesktop) {
     const mode = isDesktop ? 'DESKTOP' : 'SPA'
-    const runShell = shellEnv(workspace.projectPath, {
+    const runShell = shellInPath(workspace.projectPath, {
       ...viteEnv,
       NODE_ENV: subcommand.nodeEnv,
       STAGE: subcommand.stage,
@@ -42,7 +43,7 @@ export const start = Effect.fn('react-router.build-start')(function* (subcommand
       ANALYZE: analyze,
       MINIFY: minify,
     })
-    yield* Effect.logDebug(`Build App (${mode})`).pipe(
+    yield* Effect.logInfo(`Build App (${mode})`).pipe(
       Effect.andThen(
         runShell`
           $ BUILD_TARGET=client vite build -c vite.config.ts
@@ -62,7 +63,7 @@ export const start = Effect.fn('react-router.build-start')(function* (subcommand
       }),
     )
   } else {
-    const runShell = shellEnv(workspace.projectPath, {
+    const runShell = shellInPath(workspace.projectPath, {
       ...viteEnv,
       NODE_ENV: subcommand.nodeEnv,
       STAGE: subcommand.stage,
@@ -70,7 +71,7 @@ export const start = Effect.fn('react-router.build-start')(function* (subcommand
       ANALYZE: analyze,
       MINIFY: minify,
     })
-    yield* Effect.logDebug('Build App (SSR MODE)').pipe(
+    yield* Effect.logInfo('Build App (SSR MODE)').pipe(
       Effect.andThen(
         runShell`
           $ BUILD_TARGET=client vite build -c vite.config.ts
@@ -92,7 +93,7 @@ export const start = Effect.fn('react-router.build-start')(function* (subcommand
   }
 
   // fix server/index.js
-  yield* Effect.logDebug('Fix server/index.js').pipe(
+  yield* Effect.logInfo('Fix server/index.js').pipe(
     Effect.andThen(fs.readFileString(`${workspace.projectOutput.dist}/server/index.js`)),
     Effect.andThen((content) => {
       // dead import removal
@@ -110,7 +111,7 @@ export const start = Effect.fn('react-router.build-start')(function* (subcommand
   )
 
   // PWA fix
-  yield* Effect.logDebug('Fix PWA sw.js script').pipe(
+  yield* Effect.logInfo('Fix PWA sw.js script').pipe(
     Effect.andThen(fixPwaSwScript(workspace, { minify })),
     Effect.orDie,
   )
@@ -119,7 +120,7 @@ export const start = Effect.fn('react-router.build-start')(function* (subcommand
 
   yield* deployment.build
 
-  yield* Effect.logDebug('Cleanup build folder').pipe(
+  yield* Effect.logInfo('Cleanup build folder').pipe(
     Effect.andThen(
       shell`
         $ rm -rf ${workspace.projectOutput.dist}/package.json

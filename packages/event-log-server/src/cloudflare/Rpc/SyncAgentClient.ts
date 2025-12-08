@@ -57,7 +57,9 @@ export class SyncAgentClient extends Context.Tag('@xstack/event-log-server/RpcCl
         ),
       )
 
-      const rpcClientRef = yield* RpcClient_.makeFetchFromWebsocket(binding.fetch, Client, { rpcPath: config.rpcPath })
+      const rpcClientRef = yield* RpcClient_.makeFetchFromWebsocket(binding.fetch, Client, {
+        rpcPath: config.rpcPath,
+      })
 
       const write = Effect.fn(function* (
         remoteId: typeof EventJournal.RemoteId.Type,

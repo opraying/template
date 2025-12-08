@@ -257,7 +257,9 @@ export class PwaErrorFactory {
    * Create fallback data usage info (treated as warning, not error)
    */
   static createFallbackUsed(context: string, reason: string): PwaError {
-    return this.createError(PwaErrorCategory.DATA, PwaErrorCode.FALLBACK_DATA_USED, context, { reason })
+    return this.createError(PwaErrorCategory.DATA, PwaErrorCode.FALLBACK_DATA_USED, context, {
+      reason,
+    })
   }
 
   /**

@@ -284,7 +284,11 @@ export class Customer extends Schema.Class<Customer>('Customer')({
 
 export class Price extends Schema.Class<Price>('Price')({
   id: PriceId,
-  name: Schema.optionalWith(PriceName, { exact: true, nullable: true, default: () => PriceName.make('') }),
+  name: Schema.optionalWith(PriceName, {
+    exact: true,
+    nullable: true,
+    default: () => PriceName.make(''),
+  }),
   productId: ProductId,
   unitPrice: UnitPrice,
   unitPriceOverride: Schema.Array(
@@ -305,7 +309,11 @@ export class Price extends Schema.Class<Price>('Price')({
 export class Product extends Schema.Class<Product>('Product')({
   id: ProductId,
   name: ProductName,
-  description: Schema.optionalWith(Schema.String, { exact: true, nullable: true, default: () => '' }),
+  description: Schema.optionalWith(Schema.String, {
+    exact: true,
+    nullable: true,
+    default: () => '',
+  }),
   active: Schema.Boolean,
   metadata: Metadata,
   prices: Schema.Array(Price),
@@ -387,7 +395,10 @@ export class Subscription extends Schema.Class<Subscription>('Subscription')({
   /**
    * 计划变更
    */
-  scheduledChange: Schema.optionalWith(SubscriptionScheduledChange, { exact: true, nullable: true }),
+  scheduledChange: Schema.optionalWith(SubscriptionScheduledChange, {
+    exact: true,
+    nullable: true,
+  }),
   /**
    * 管理 URL
    */
@@ -402,7 +413,10 @@ export class Subscription extends Schema.Class<Subscription>('Subscription')({
   /**
    * 下一个交易
    */
-  nextTransaction: Schema.optionalWith(NextSubscriptionTransaction, { exact: true, nullable: true }),
+  nextTransaction: Schema.optionalWith(NextSubscriptionTransaction, {
+    exact: true,
+    nullable: true,
+  }),
   /**
    * 元数据
    */

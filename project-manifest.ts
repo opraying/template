@@ -85,8 +85,14 @@ export const PROJECT_DEFINITIONS: ProjectDefinition[] = [
         },
       }),
       tsApp('local-first/sync-server', { baseConfigPath: LEVEL3_BASE_PATH, checkIncludes: [] }),
-      tsApp('local-first/sync-agent-client', { baseConfigPath: LEVEL3_BASE_PATH, checkIncludes: [] }),
-      tsApp('local-first/sync-storage-proxy', { baseConfigPath: LEVEL3_BASE_PATH, checkIncludes: [] }),
+      tsApp('local-first/sync-agent-client', {
+        baseConfigPath: LEVEL3_BASE_PATH,
+        checkIncludes: [],
+      }),
+      tsApp('local-first/sync-storage-proxy', {
+        baseConfigPath: LEVEL3_BASE_PATH,
+        checkIncludes: [],
+      }),
     ],
     baseTargets: [
       {

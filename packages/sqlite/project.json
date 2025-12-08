@@ -8,7 +8,7 @@
       "executor": "nx:run-commands",
       "outputs": ["{workspaceRoot}/node_modules/.vitest/packages/sqlite", "{workspaceRoot}/coverage/packages/sqlite"],
       "options": {
-        "command": "pnpm xdev test --project pkgs-sqlite"
+        "command": "xdev test --project pkgs-sqlite"
       }
     },
     "madge": {

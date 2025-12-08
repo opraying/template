@@ -11,7 +11,7 @@
         "{workspaceRoot}/coverage/packages/atom-react"
       ],
       "options": {
-        "command": "pnpm xdev test --project pkgs-atom-react"
+        "command": "xdev test --project pkgs-atom-react"
       }
     },
     "madge": {

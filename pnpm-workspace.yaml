@@ -43,10 +43,10 @@ overrides:
   clsx: 2.1.1
   cookie: 1.1.1
   deep-equal: npm:@nolyfill/deep-equal@^1
-  effect: 3.19.6
+  effect: 3.19.9
   es-iterator-helpers: npm:@nolyfill/es-iterator-helpers@^1
   es-set-tostringtag: npm:@nolyfill/es-set-tostringtag@^1
-  esbuild: 0.27.0
+  esbuild: 0.27.1
   function-bind: npm:@nolyfill/function-bind@^1
   harmony-reflect: npm:@nolyfill/harmony-reflect@^1
   has: npm:@nolyfill/has@^1
@@ -62,9 +62,9 @@ overrides:
   object.groupby: npm:@nolyfill/object.groupby@
   object.hasown: npm:@nolyfill/object.hasown@^1
   object.values: npm:@nolyfill/object.values@^1
-  react: 19.2.0
-  react-dom: 19.2.0
-  react-is: 19.2.0
+  react: 19.2.1
+  react-dom: 19.2.1
+  react-is: 19.2.1
   react-native: 0.83.0-rc.3
   safe-buffer: npm:@nolyfill/safe-buffer@^1
   safer-buffer: npm:@nolyfill/safer-buffer@^1

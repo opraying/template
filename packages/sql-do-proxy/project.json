@@ -11,7 +11,7 @@
         "{workspaceRoot}/coverage/packages/sql-do-proxy"
       ],
       "options": {
-        "command": "pnpm xdev test --project pkgs-sql-do-proxy"
+        "command": "xdev test --project pkgs-sql-do-proxy"
       }
     },
     "madge": {

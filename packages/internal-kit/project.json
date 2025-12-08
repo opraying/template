@@ -11,7 +11,7 @@
         "{workspaceRoot}/coverage/packages/internal-kit"
       ],
       "options": {
-        "command": "pnpm xdev test --project pkgs-internal-kit"
+        "command": "xdev test --project pkgs-internal-kit"
       }
     },
     "madge": {

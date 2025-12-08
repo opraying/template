@@ -55,10 +55,11 @@ export const SyncServerConfig = Context.GenericTag<SyncServerConfig>(
 export class SyncServerClient extends Context.Tag('@xstack/event-log-server/RpcClient/SyncServerClient')<
   SyncServerClient,
   {
-    write: (
-      data: Uint8Array<ArrayBufferLike>,
-    ) => Effect.Effect<
-      { readonly response: Uint8Array<ArrayBufferLike>; readonly changes: readonly Uint8Array<ArrayBufferLike>[] },
+    write: (data: Uint8Array<ArrayBufferLike>) => Effect.Effect<
+      {
+        readonly response: Uint8Array<ArrayBufferLike>
+        readonly changes: readonly Uint8Array<ArrayBufferLike>[]
+      },
       SyncServerError
     >
     requestChanges: (
@@ -79,7 +80,9 @@ export class SyncServerClient extends Context.Tag('@xstack/event-log-server/RpcC
         ),
       )
 
-      const rpcClientRef = yield* RpcClient_.makeFetchFromWebsocket(binding.fetch, Client, { rpcPath: config.rpcPath })
+      const rpcClientRef = yield* RpcClient_.makeFetchFromWebsocket(binding.fetch, Client, {
+        rpcPath: config.rpcPath,
+      })
 
       const write = Effect.fnUntraced(function* (data: Uint8Array<ArrayBufferLike>) {
         const client = yield* rpcClientRef.get

@@ -132,7 +132,15 @@ export const makeSchemaForm = (
     const { schemaJSON } = useMemo(() => FG.toJson(schema, control._defaultValues as any), [schema])
 
     const fields = useMemo(
-      () => render({ schemaJSON, groups, register, components, control: control, skipFirstGroup: rest.skipFirstGroup }),
+      () =>
+        render({
+          schemaJSON,
+          groups,
+          register,
+          components,
+          control: control,
+          skipFirstGroup: rest.skipFirstGroup,
+        }),
       [schemaJSON, groups, rest.form.register, components, control],
     )
 

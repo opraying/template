@@ -258,10 +258,9 @@ export const make = (options?: {
             for (let i = 0; i < entryIds.length; i += selectInClauseBatchSize) {
               const chunkOfIds = entryIds.slice(i, i + selectInClauseBatchSize)
               if (chunkOfIds.length > 0) {
-                yield* sql<{ id: Uint8Array<ArrayBufferLike> }>`SELECT id FROM ${sql(entryTable)} WHERE ${sql.in(
-                  'id',
-                  chunkOfIds,
-                )}`.withoutTransform.pipe(
+                yield* sql<{
+                  id: Uint8Array<ArrayBufferLike>
+                }>`SELECT id FROM ${sql(entryTable)} WHERE ${sql.in('id', chunkOfIds)}`.withoutTransform.pipe(
                   Effect.withSpan('SqlEventJournal.checkExistingEntriesChunk'),
                   Effect.annotateSpans({
                     'event.journal.operation': 'check_existing_entries_chunk',

@@ -3,8 +3,8 @@ import type { SqlError } from '@effect/sql'
 import * as SqlD1 from '@effect/sql-d1/D1Client'
 import { formatSchema, loadSchemaContext } from '@prisma/internals'
 import type { EngineArgs } from '@prisma/migrate'
-import { Migrate } from '@prisma/migrate'
-import { Effect, Exit, Layer, Schedule, String } from 'effect'
+import { SchemaEngineCLI } from '@prisma/migrate'
+import { Effect, Exit, Layer, pipe, Schedule, Scope, String } from 'effect'
 import { tsImport } from 'tsx/esm/api'
 import type { Unstable_Config } from 'wrangler'
 import { generate, type PrismaGenerateOptions } from '../../../packages/db/src/prisma'
@@ -20,114 +20,56 @@ import type {
   DatabaseMigrateResolveSubcommand,
   DatabasePushSubcommand,
   DatabaseSeedSubcommand,
-} from '../domain'
-import { shell, shellInPath } from '../utils'
+} from './domain'
+import { shell, shellInPath } from '../utils/shell'
 import type * as Workspace from '../workspace'
-import { CaptureStdout } from './capture-stdout'
+import { CaptureStdout } from '../utils/capture-stdout'
 import { formatMigrationName } from './utils'
 
-interface DatabaseConfig {
-  provider: PrismaGenerateOptions['provider']
-  url?: PrismaGenerateOptions['url'] | undefined
-  runtime: 'd1' | 'browser' | 'server'
-}
+type DatabaseConfig =
+  | {
+      provider: PrismaGenerateOptions['provider']
+      runtime: 'd1'
+    }
+  | {
+      provider: PrismaGenerateOptions['provider']
+      runtime: 'browser'
+    }
+  | {
+      provider: PrismaGenerateOptions['provider']
+      runtime: 'server'
+      url: string
+    }
 
 type SeedEntry = {
   start: Effect.Effect<void, SqlError.SqlError, never>
 }
 
-const devDB = 'dev.db'
-
-// https://vscode.dev/github/prisma/prisma-engines/blob/main/schema-engine/connectors/schema-connector/src/migrations_directory.rs#L30
-// "%Y%m%d%H%M%S"
-const getMigrationDate = () => {
-  const date = new Date()
-  const year = date.getFullYear()
-  const month = date.getMonth() + 1
-  const day = date.getDate()
-  const hours = date.getHours()
-  const minutes = date.getMinutes()
-  const seconds = date.getSeconds()
-
-  const pad = (n: number) => n.toString().padStart(2, '0')
-
-  return `${year}${pad(month)}${pad(day)}${pad(hours)}${pad(minutes)}${pad(seconds)}`
-}
-
-export const existDatabase = Effect.fn('db.exist-database')(function* (workspace: Workspace.Workspace) {
-  yield* Effect.annotateCurrentSpan({
-    projectName: workspace.projectName,
-  })
-
-  const path = yield* Path.Path
-  const fs = yield* FileSystem.FileSystem
-
-  const dbDir = path.join(workspace.projectPath, 'db')
-
-  const migrationsDir = path.join(dbDir, 'migrations')
-
-  return yield* fs.exists(migrationsDir)
-}, Effect.orDie)
-
-const detectDatabase = Effect.fn('db.detect-database')(function* (
-  workspace: Workspace.Workspace,
-  { databaseName }: { databaseName?: string } = {},
-) {
-  yield* Effect.annotateCurrentSpan({
-    projectName: workspace.projectName,
-    databaseName,
-  })
-
-  const path = yield* Path.Path
-  const fs = yield* FileSystem.FileSystem
-
-  const dbDir = path.join(workspace.projectPath, 'db')
-
-  const migrationsDir = path.join(dbDir, 'migrations')
-  if (!(yield* fs.exists(migrationsDir))) {
-    yield* fs.makeDirectory(migrationsDir)
-  }
-
-  const tsconfig = path.join(workspace.projectPath, 'tsconfig.app.json')
-  const tablesPath = path.join(dbDir, 'tables.ts')
-
-  const { tables, config } = yield* Effect.promise(() =>
-    tsImport(tablesPath, { parentURL: import.meta.url, tsconfig }),
-  ).pipe(
-    Effect.map((_) => {
-      const config = _.config as DatabaseConfig
-
-      config.url = config.url || `"file:./${devDB}"`
-
-      return {
-        tables: _.tables as TablesRecord<any>,
-        config,
-      }
-    }),
-  )
-
-  return {
-    dbDir,
-    migrationsDir,
-    tables,
-    config,
-    tsconfig,
-  }
-})
-
-const wranglerConfig = Effect.fn('wrangler.get-config')(function* (
+const getWranglerConfig = Effect.fn('wrangler.get-config')(function* (
   workspace: Workspace.Workspace,
   { database }: { database?: string | undefined } = {},
-) {
+): Effect.fn.Return<
+  {
+    persistRoot: string
+    persistTo: string
+    wranglerConfigPath: string
+    databaseName: string
+    databaseNameId: string
+    databaseFile: string
+    databaseId: string | undefined
+    previewDatabaseId: string | undefined
+  },
+  never,
+  Path.Path | Scope.Scope
+> {
   const path = yield* Path.Path
   const wranglerConfigPath = path.join(workspace.projectPath, 'wrangler.jsonc')
-  const fallbackConfigPath = path.join(workspace.projectRoot, '/web/wrangler.jsonc')
 
   const { config: wranglerConfig, path: foundWranglerConfigPath } = yield* parseConfig(
-    [wranglerConfigPath, fallbackConfigPath],
+    wranglerConfigPath,
     process.env.NODE_ENV,
     process.env.STAGE,
-  )
+  ).pipe(Effect.orDie)
 
   const selectedDatabaseName = database || wranglerConfig.d1_databases[0].database_name
   const selectedDatabase = wranglerConfig.d1_databases.find((_) => _.database_name === selectedDatabaseName)
@@ -141,7 +83,7 @@ const wranglerConfig = Effect.fn('wrangler.get-config')(function* (
   const databaseId = selectedDatabase?.database_id
 
   const persistRoot = path.join(workspace.root, '.wrangler/state')
-  const persistTo = path.join(workspace.root, '.wrangler/state/v3')
+  const persistTo = path.join(persistRoot, 'v3')
   const dbFile = path.join(persistTo, 'd1/miniflare-D1DatabaseObject', `${databaseNameId}.sqlite`)
 
   return {
@@ -156,12 +98,105 @@ const wranglerConfig = Effect.fn('wrangler.get-config')(function* (
   }
 })
 
-const getMigrations = Effect.fn('db.get-migrations')(function* (dir: string) {
+const devDB = 'dev.db'
+
+const getMigrationDate = () => {
+  const date = new Date()
+  const year = date.getFullYear()
+  const month = date.getMonth() + 1
+  const day = date.getDate()
+  const hours = date.getHours()
+  const minutes = date.getMinutes()
+  const seconds = date.getSeconds()
+
+  const pad = (n: number) => n.toString().padStart(2, '0')
+
+  return `${year}${pad(month)}${pad(day)}${pad(hours)}${pad(minutes)}${pad(seconds)}`
+}
+
+export const existDatabase = Effect.fn('db.exist-database')(function* (
+  workspace: Workspace.Workspace,
+): Effect.fn.Return<boolean, never, Path.Path | FileSystem.FileSystem> {
+  yield* Effect.annotateCurrentSpan({
+    projectName: workspace.projectName,
+  })
+
+  const path = yield* Path.Path
   const fs = yield* FileSystem.FileSystem
 
-  if (!(yield* fs.exists(dir))) {
-    yield* fs.makeDirectory(dir)
+  const dbDir = path.join(workspace.projectPath, 'db')
+
+  const migrationsDir = path.join(dbDir, 'migrations')
+
+  return yield* fs.exists(migrationsDir).pipe(Effect.orElseSucceed(() => false))
+}, Effect.orDie)
+
+const detectDatabase = Effect.fn('db.detect-database')(function* (
+  workspace: Workspace.Workspace,
+  { databaseName }: { databaseName?: string | undefined } = {},
+): Effect.fn.Return<
+  {
+    dbDir: string
+    migrationsDir: string
+    tables: Record<string, any>
+    config: DatabaseConfig
+    tsconfigPath: string
+  },
+  never,
+  Path.Path | FileSystem.FileSystem
+> {
+  yield* Effect.annotateCurrentSpan({
+    projectName: workspace.projectName,
+    databaseName,
+  })
+
+  const path = yield* Path.Path
+  const fs = yield* FileSystem.FileSystem
+
+  const dbDir = path.join(workspace.projectPath, 'db')
+
+  const migrationsDir = path.join(dbDir, 'migrations')
+  yield* pipe(
+    fs.exists(migrationsDir),
+    Effect.tap((exists) => (!exists ? fs.makeDirectory(migrationsDir) : Effect.void)),
+    Effect.orDie,
+  )
+
+  const tsconfigPath = path.join(workspace.projectPath, 'tsconfig.app.json')
+  const tablesPath = path.join(dbDir, 'tables.ts')
+
+  const { tables, config } = yield* Effect.promise(() =>
+    tsImport(tablesPath, { parentURL: import.meta.url, tsconfig: tsconfigPath }),
+  ).pipe(
+    Effect.map((_) => {
+      const config = _.config as DatabaseConfig
+
+      return {
+        tables: _.tables as TablesRecord<any>,
+        config,
+      }
+    }),
+  )
+
+  return {
+    dbDir,
+    migrationsDir,
+    tables,
+    config,
+    tsconfigPath,
   }
+})
+
+type PrismaMigration = {
+  filepath: string
+  content: string
+}
+
+const getMigrations = Effect.fn('db.get-migrations')(function* (
+  dir: string,
+): Effect.fn.Return<Array<PrismaMigration>, never, FileSystem.FileSystem | Path.Path> {
+  const fs = yield* FileSystem.FileSystem
+  const path = yield* Path.Path
 
   const migrations = yield* fs.readDirectory(dir).pipe(
     Effect.map((files) =>
@@ -191,6 +226,21 @@ const getMigrations = Effect.fn('db.get-migrations')(function* (dir: string) {
           return 0
         }),
     ),
+    Effect.flatMap((files) =>
+      Effect.forEach(
+        files,
+        Effect.fnUntraced(function* (filename) {
+          const filepath = path.join(dir, filename)
+          const content = yield* fs.readFileString(filepath)
+
+          return {
+            filepath,
+            content,
+          }
+        }),
+      ),
+    ),
+    Effect.orDie,
   )
 
   return migrations
@@ -201,56 +251,50 @@ const syncPrismaSchema = Effect.fn('prisma.sync-schema')(function* (
   { dbDir }: { dbDir: string },
   config: DatabaseConfig,
   tables: TablesRecord<any>,
-) {
+): Effect.fn.Return<
+  {
+    prismaPath: string
+    prisma: string
+  },
+  never,
+  Path.Path | FileSystem.FileSystem
+> {
   const path = yield* Path.Path
   const fs = yield* FileSystem.FileSystem
-
-  const url = config.url
 
   if (config.runtime === 'server' && !config.url) {
     return yield* Effect.dieMessage('Missing database url')
   }
 
-  const generated = yield* Effect.try({
-    try: () =>
-      generate(
-        {
-          provider: config.provider,
-
-          url: url!,
-          generator: {
-            markdown: {
-              title: 'Database Schema',
-              output: './database-schema.md',
-              root: path.relative(dbDir, workspace.root),
-            },
+  const generated = yield* Effect.try(() =>
+    generate(
+      {
+        provider: config.provider,
+        generator: {
+          markdown: {
+            title: 'Database Schema',
+            output: './database-schema.md',
+            root: path.relative(dbDir, workspace.root),
           },
         },
-        tables,
-      ),
-    catch: (error) => new Error('Failed to generate prisma schema', { cause: error }),
-  }).pipe(
-    // format prisma schema
+      },
+      tables,
+    ),
+  ).pipe(
     Effect.andThen((content) =>
-      formatSchema(
-        {
-          schemas: [['schema.prisma', content]],
-        },
-        {
-          insertSpaces: true,
-          tabSize: 2,
-        },
-      ),
+      formatSchema({ schemas: [['schema.prisma', content]] }, { insertSpaces: true, tabSize: 2 }),
     ),
     Effect.map((result) => result[0][1]),
+    Effect.orDie,
   )
+
   const prismaPath = path.join(dbDir, 'schema.prisma')
-  yield* fs.writeFileString(prismaPath, generated)
+  yield* fs.writeFileString(prismaPath, generated).pipe(Effect.orDie)
 
   const prismaBin = path.join(workspace.root, 'node_modules/.bin/prisma')
 
   yield* shellInPath(dbDir)`
-    $ ${prismaBin} generate
+    $ ${prismaBin} generate --schema=./schema.prisma
   `
 
   yield* Effect.logInfo('Prisma schema generated')
@@ -269,18 +313,19 @@ const databaseNameToId = (config: Unstable_Config, name: string) =>
   })
 
 /**
- * Only Dev Mode
- * Push changes to D1 database
+ * Push changes to local d1 database
  */
-const d1Push = Effect.fn('d1-push')(function* (
+const pushD1 = Effect.fn('push-d1')(function* (
   workspace: Workspace.Workspace,
   { sql, database }: { sql: string; database?: string | undefined },
-) {
-  const { persistRoot, wranglerConfigPath, databaseName } = yield* wranglerConfig(workspace, { database })
+): Effect.fn.Return<void, never, Path.Path | Scope.Scope> {
+  const { persistRoot, wranglerConfigPath, databaseName } = yield* getWranglerConfig(workspace, {
+    database,
+  })
 
   const output = yield* shell`
-      $ wrangler d1 execute ${databaseName} --local --persist-to=${persistRoot} --config=${wranglerConfigPath} --json --command="${sql}"
-    `.pipe(
+    $ wrangler d1 execute ${databaseName} --local --persist-to=${persistRoot} --config=${wranglerConfigPath} --json --command="${sql}"
+  `.pipe(
     Effect.withSpan('db.d1-execute', {
       attributes: {
         projectName: workspace.projectName,
@@ -294,12 +339,8 @@ const d1Push = Effect.fn('d1-push')(function* (
   if (output.stderr) {
     yield* Effect.logError('D1 push failed', output.stderr)
   } else {
-    yield* Effect.try({
-      try: () => JSON.parse(output.stdout),
-      catch(error) {
-        return error as Error
-      },
-    }).pipe(
+    yield* Effect.try(() => JSON.parse(output.stdout)).pipe(
+      Effect.orDieWith(() => new Error('Failed to parse JSON')),
       Effect.andThen((result: any[]) => {
         const allSuccess = result.every((item) => item.success)
 
@@ -307,18 +348,155 @@ const d1Push = Effect.fn('d1-push')(function* (
           return Effect.logInfo('D1 push success').pipe(Effect.annotateLogs({ ...result }))
         }
 
-        return Effect.logError('D1 push failed', result)
+        return Effect.logError('D1 push failed').pipe(Effect.annotateLogs({ ...result }))
       }),
     )
   }
 })
 
-const d1ApplyMigrations = Effect.fn('d1-apply-migrations')(function* (
+/**
+ * Reset local d1 database
+ */
+const resetD1 = Effect.fn('reset-d1')(function* (
   workspace: Workspace.Workspace,
-  { deploy = false, database }: { deploy?: boolean; database?: string | undefined } = { deploy: false },
-) {
+  subcommand: { database: string | undefined },
+): Effect.fn.Return<void, never, Path.Path | Scope.Scope> {
+  const path = yield* Path.Path
+  const { persistRoot, wranglerConfigPath, databaseName, databaseId, databaseFile } = yield* getWranglerConfig(
+    workspace,
+    {
+      database: subcommand.database,
+    },
+  )
+
+  yield* Effect.logInfo('Reset database').pipe(
+    Effect.annotateLogs({
+      database: databaseName,
+      databaseId,
+      databaseFile,
+    }),
+  )
+
+  const d1MigrationsInit = `
+    CREATE TABLE IF NOT EXISTS d1_migrations(
+      id         INTEGER PRIMARY KEY AUTOINCREMENT,
+      name       TEXT UNIQUE,
+      applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
+    );
+  `
+
+  // Ensure directory exists before creating files
+  const databaseDir = path.dirname(databaseFile)
+  yield* shell`
+    $ mkdir -p ${databaseDir}
+  `
+
+  // Remove database files if they exist (won't error if they don't)
+  yield* shell`
+    $ rm -f ${databaseFile} ${databaseFile}-wal ${databaseFile}-shm
+  `.pipe(Effect.ignore)
+
+  // Create the database file
+  yield* shell`
+    $ touch ${databaseFile}
+  `
+
+  const output = yield* shell`
+    $ wrangler d1 execute ${databaseName} --local --persist-to=${persistRoot} --config=${wranglerConfigPath} --json --command="${d1MigrationsInit}"
+  `
+
+  if (output.stderr) {
+    yield* Effect.logError('D1 reset failed', output.stderr)
+  } else {
+    yield* Effect.try(() => JSON.parse(output.stdout)).pipe(
+      Effect.orDieWith(() => new Error('Failed to parse d1 output result')),
+      Effect.andThen((result: any[]) => {
+        const allSuccess = result.every((item) => item.success)
+
+        if (allSuccess) {
+          return Effect.logInfo('D1 reset success').pipe(Effect.annotateLogs({ ...result }))
+        }
+
+        return Effect.logError('D1 reset failed', result)
+      }),
+    )
+  }
+})
+
+/**
+ * Dump D1 database
+ */
+const dumpD1 = Effect.fn('dump-d1')(function* (
+  workspace: Workspace.Workspace,
+  subcommand: DatabaseDumpSubcommand,
+): Effect.fn.Return<void, never, Path.Path | FileSystem.FileSystem | Scope.Scope> {
+  const isProd = process.env.NODE_ENV === 'production'
+  const path = yield* Path.Path
+  const fs = yield* FileSystem.FileSystem
+  const { wranglerConfigPath, databaseName, databaseFile } = yield* getWranglerConfig(workspace, {
+    database: subcommand.database,
+  })
+  const { dbDir } = yield* detectDatabase(workspace, { databaseName: subcommand.database })
+  const schemaOutput = path.join(dbDir, 'schema.sql')
+
+  const formatSchema = fs.readFileString(schemaOutput).pipe(
+    Effect.flatMap((content) =>
+      fs.writeFileString(
+        schemaOutput,
+        content
+          .replace(/create table sqlite_sequence\(name,seq\);/i, '')
+          .replace(/create table _cf_KV[\s\S]*?\);/im, '')
+          .replace(/create table _cf_METADATA[\s\S]*?\);/im, '')
+          .replace(/\n{2,}/gm, '\n')
+          .trim(),
+      ),
+    ),
+    Effect.orDie,
+  )
+
+  if (isProd) {
+    let args = `--config=${wranglerConfigPath} --no-data --remote`
+    args += ` --output=${schemaOutput}`
+
+    const output = yield* shell`
+      $ wrangler d1 export ${databaseName} ${args}
+    `
+
+    if (output.stderr) {
+      yield* Effect.logError('Failed to dump production schema', output.stderr)
+    } else {
+      yield* formatSchema
+
+      yield* Effect.logInfo('Dump production schema done').pipe(Effect.annotateLogs('output', schemaOutput))
+    }
+  } else {
+    yield* shell`
+      $$ sqlite3 ${databaseFile} .schema > ${schemaOutput}
+    `
+
+    yield* formatSchema
+
+    yield* Effect.logInfo('Dump local schema done').pipe(
+      Effect.annotateLogs('file', databaseFile),
+      Effect.annotateLogs('output', schemaOutput),
+    )
+  }
+})
+
+const applyD1Migrations = Effect.fn('apply-d1-migrations')(function* (
+  workspace: Workspace.Workspace,
+  {
+    deploy = false,
+    reset = false,
+    database,
+  }: {
+    deploy?: boolean | undefined
+    reset?: boolean | undefined
+    database?: string | undefined
+  } = { deploy: false },
+): Effect.fn.Return<void, never, Path.Path | Scope.Scope> {
   const isPreview = deploy && process.env.STAGE !== 'production'
-  const { persistRoot, wranglerConfigPath, databaseName, databaseId, previewDatabaseId } = yield* wranglerConfig(
+  const { persistRoot, wranglerConfigPath, databaseName, databaseId, previewDatabaseId } = yield* getWranglerConfig(
     workspace,
     { database },
   )
@@ -355,6 +533,10 @@ const d1ApplyMigrations = Effect.fn('d1-apply-migrations')(function* (
     }),
   )
 
+  if (!deploy && reset) {
+    yield* resetD1(workspace, { database })
+  }
+
   yield* shell`
     $ export CLOUDFLARE_API_TOKEN="${API_TOKEN}"
     $ export CLOUDFLARE_ACCOUNT_ID="${ACCOUNT_ID}"
@@ -378,133 +560,62 @@ const d1ApplyMigrations = Effect.fn('d1-apply-migrations')(function* (
   )
 })
 
-const d1Reset = Effect.fn('d1-reset')(function* (
-  workspace: Workspace.Workspace,
-  subcommand: { database: string | undefined },
+const applyPrismaMigrations = Effect.fn('apply-prisma-migrations')(function* (
+  _workspace: Workspace.Workspace,
+  {
+    dbDir,
+    datasource,
+    migrations,
+    reset = false,
+  }: {
+    dbDir: string
+    datasource: { url: string }
+    migrations: Array<PrismaMigration>
+    reset?: boolean | undefined
+  },
 ) {
-  const { persistRoot, wranglerConfigPath, databaseName, databaseId, databaseFile } = yield* wranglerConfig(workspace, {
-    database: subcommand.database,
-  })
-
-  yield* Effect.logInfo('Reset database').pipe(
-    Effect.annotateLogs({
-      database: databaseName,
-      databaseId,
-      databaseFile,
-    }),
-  )
-
-  const d1MigrationsInit = `
-    CREATE TABLE IF NOT EXISTS d1_migrations(
-        id         INTEGER PRIMARY KEY AUTOINCREMENT,
-        name       TEXT UNIQUE,
-        applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
-    );`
-
-  const output = yield* shell`
-    $ rm -f ${databaseFile} ${databaseFile}-wal ${databaseFile}-shm
-    $ touch ${databaseFile}
-    $ wrangler d1 execute ${databaseName} --local --persist-to=${persistRoot} --config=${wranglerConfigPath} --json --command="${d1MigrationsInit}"
-  `
-
-  if (output.stderr) {
-    yield* Effect.logError('D1 reset failed', output.stderr)
-  } else {
-    yield* Effect.try({
-      try: () => JSON.parse(output.stdout),
-      catch(error) {
-        return error as Error
-      },
-    }).pipe(
-      Effect.andThen((result: any[]) => {
-        const allSuccess = result.every((item) => item.success)
-
-        if (allSuccess) {
-          return Effect.logInfo('D1 reset success').pipe(Effect.annotateLogs({ ...result }))
-        }
-
-        return Effect.logError('D1 reset failed', result)
-      }),
-    )
-  }
-})
-
-const d1Dump = Effect.fn('d1-dump')(function* (workspace: Workspace.Workspace, subcommand: DatabaseDumpSubcommand) {
-  const isProd = process.env.NODE_ENV === 'production'
   const path = yield* Path.Path
   const fs = yield* FileSystem.FileSystem
-  const { wranglerConfigPath, databaseName, databaseFile } = yield* wranglerConfig(workspace, {
-    database: subcommand.database,
-  })
-  const dbDir = path.join(workspace.projectPath, 'db')
-  const schemaOutput = path.join(dbDir, 'schema.sql')
+  const lockFileContent = yield* fs.readFileString(path.join(dbDir, 'migration_lock.toml'), 'utf8')
+  const schemaContext = yield* Effect.promise(() => loadSchemaContext({ schemaPath: { baseDir: dbDir }, cwd: dbDir }))
 
-  const formatSchema = Effect.gen(function* () {
-    const content = yield* fs.readFileString(schemaOutput)
-
-    yield* fs.writeFileString(
-      schemaOutput,
-      content
-        .replace(/create table sqlite_sequence\(name,seq\);/i, '')
-        .replace(/create table _cf_KV[\s\S]*?\);/im, '')
-        .replace(/create table _cf_METADATA[\s\S]*?\);/im, '')
-        .replace(/\n{2,}/gm, '\n')
-        .trim(),
-    )
-  })
-
-  if (isProd) {
-    let args = `--config=${wranglerConfigPath} --no-data --remote`
-    args += ` --output=${schemaOutput}`
-
-    const output = yield* shell`
-      $ wrangler d1 export ${databaseName} ${args}
-    `
-
-    if (output.stderr) {
-      yield* Effect.logError('Failed to dump production schema', output.stderr)
-    } else {
-      yield* formatSchema
-
-      yield* Effect.logInfo('Dump production schema done').pipe(Effect.annotateLogs('output', schemaOutput))
-    }
-  } else {
-    yield* shell`
-      $$ sqlite3 ${databaseFile} .schema > ${schemaOutput}
-    `
-
-    yield* formatSchema
-
-    yield* Effect.logInfo('Dump local schema done').pipe(
-      Effect.annotateLogs('file', databaseFile),
-      Effect.annotateLogs('output', schemaOutput),
-    )
-  }
-})
-
-const prismaApplyMigrations = Effect.fn('prisma.apply-migrations')(function* (
-  _workspace: Workspace.Workspace,
-  { dbDir }: { dbDir: string },
-  { reset = false }: { reset?: boolean } = { reset: false },
-) {
-  const path = yield* Path.Path
-  const prismaSchemaPath = path.join(dbDir, 'schema.prisma')
-
-  const schemaContext = yield* Effect.promise(() =>
-    loadSchemaContext({
-      schemaPathFromConfig: prismaSchemaPath,
-    }),
-  )
+  const prismaFilter = { externalEnums: [], externalTables: [] }
 
   yield* Effect.acquireUseRelease(
-    Effect.promise(() => Migrate.setup({ schemaContext, configDir: dbDir, schemaEngineConfig: {} })),
+    Effect.promise(() =>
+      SchemaEngineCLI.setup({
+        schemaContext,
+        baseDir: dbDir,
+        datasource: { url: datasource.url },
+      }),
+    ),
     (migrate) =>
-      Effect.suspend(() => (reset ? Effect.promise(() => migrate.reset()) : Effect.void)).pipe(
+      pipe(
+        Effect.suspend(() => (reset ? Effect.promise(() => migrate.reset({ filter: prismaFilter })) : Effect.void)),
         Effect.andThen(
           Effect.promise(() => {
             const captureStdout = new CaptureStdout()
             captureStdout.startCapture()
-            const output = migrate.applyMigrations() as Promise<{
+            const output = migrate.applyMigrations({
+              filters: prismaFilter,
+              migrationsList: {
+                baseDir: dbDir,
+                lockfile: {
+                  content: lockFileContent,
+                  path: 'migration_lock.toml',
+                },
+                migrationDirectories: migrations.map((_) => {
+                  return {
+                    path: _.filepath,
+                    migrationFile: {
+                      path: 'migration.sql',
+                      content: { tag: 'ok', value: _.content },
+                    },
+                  }
+                }),
+                shadowDbInitScript: '',
+              },
+            }) as Promise<{
               appliedMigrationNames: string[]
             }>
 
@@ -529,25 +640,28 @@ const prismaApplyMigrations = Effect.fn('prisma.apply-migrations')(function* (
 export const seed = Effect.fn('db.seed')(function* (
   workspace: Workspace.Workspace,
   subcommand: DatabaseSeedSubcommand,
-) {
+): Effect.fn.Return<void, SqlError.SqlError, FileSystem.FileSystem | Path.Path | Scope.Scope> {
   const path = yield* Path.Path
   const fs = yield* FileSystem.FileSystem
-  const { dbDir, tsconfig, config } = yield* detectDatabase(workspace)
+  const { dbDir, tsconfigPath, config } = yield* detectDatabase(workspace, {
+    databaseName: subcommand.database,
+  })
 
-  // default seed file
   const defaultSeedFile = path.join(dbDir, 'seed.ts')
 
-  if (!(yield* fs.exists(defaultSeedFile))) {
-    yield* fs.writeFileString(defaultSeedFile, 'export const start = () => {}')
-  }
+  yield* fs.exists(defaultSeedFile).pipe(
+    Effect.tap((exists) =>
+      exists ? fs.writeFileString(defaultSeedFile, 'export const start = () => {}') : Effect.void,
+    ),
+    Effect.orDie,
+  )
 
   const seedPath = subcommand.file ? path.resolve(dbDir, subcommand.file) : defaultSeedFile
-  const seedExists = yield* fs.exists(seedPath)
 
-  if (!seedExists) {
-    yield* Effect.logInfo('No seed file found').pipe(Effect.annotateLogs('file', seedPath))
-    return
-  }
+  yield* fs.exists(seedPath).pipe(
+    Effect.tap((exists) => (!exists ? Effect.dieMessage(`No seed file found: ${seedPath}`) : Effect.void)),
+    Effect.orDie,
+  )
 
   if (config.runtime === 'browser') {
     yield* Effect.logInfo('Skip seed in browser')
@@ -555,7 +669,7 @@ export const seed = Effect.fn('db.seed')(function* (
   }
 
   const seed: SeedEntry = yield* Effect.promise(() =>
-    tsImport(seedPath, { parentURL: import.meta.url, tsconfig }),
+    tsImport(seedPath, { parentURL: import.meta.url, tsconfig: tsconfigPath }),
   ).pipe(
     Effect.withSpan('db.load-seed-file', {
       attributes: {
@@ -567,61 +681,77 @@ export const seed = Effect.fn('db.seed')(function* (
   )
 
   if (config.runtime === 'd1') {
-    const { wranglerConfigPath, persistTo, databaseId } = yield* wranglerConfig(workspace, {
+    const { wranglerConfigPath, persistTo, databaseId } = yield* getWranglerConfig(workspace, {
       database: subcommand.database,
     })
     const { Miniflare } = yield* Effect.promise(() => import('miniflare'))
     const { config } = yield* parseConfig(wranglerConfigPath)
 
-    const dev = new Miniflare({
-      script: '',
-      modules: true,
-      compatibilityDate: '2025-09-25',
-      defaultPersistRoot: persistTo,
-      cachePersist: path.join(persistTo, 'cache'),
-      workflowsPersist: path.join(persistTo, 'workflows'),
-      d1Persist: path.join(persistTo, 'd1'),
-      d1Databases: Object.fromEntries(
-        config.d1_databases.map((_) => {
-          return [_.binding, _.database_id || '']
-        }),
-      ),
-    })
+    yield* Effect.acquireUseRelease(
+      Effect.gen(function* () {
+        const miniflare = new Miniflare({
+          script: '',
+          modules: true,
+          compatibilityDate: '2025-09-25',
+          defaultPersistRoot: persistTo,
+          cachePersist: path.join(persistTo, 'cache'),
+          workflowsPersist: path.join(persistTo, 'workflows'),
+          d1Persist: path.join(persistTo, 'd1'),
+          d1Databases: Object.fromEntries(
+            config.d1_databases.map((_) => {
+              return [_.binding, _.database_id || '']
+            }),
+          ),
+        })
 
-    yield* Effect.promise(() => dev.ready)
-    const dbBinding = config.d1_databases.find((_) => _.database_id === databaseId)?.binding || 'DB'
-    const DB = yield* Effect.promise(() => dev.getD1Database(dbBinding))
-
-    const SeedLive = Layer.orDie(
-      SqlD1.layer({
-        db: DB,
-        transformQueryNames: String.camelToSnake,
-        transformResultNames: String.snakeToCamel,
+        return miniflare
       }),
+      Effect.fnUntraced(function* (miniflare) {
+        yield* Effect.promise(() => miniflare.ready)
+
+        const dbBinding = config.d1_databases.find((_) => _.database_id === databaseId)?.binding || 'DB'
+        const DB = yield* Effect.promise(() => miniflare.getD1Database(dbBinding))
+
+        const SeedLive = Layer.orDie(
+          SqlD1.layer({
+            db: DB,
+            transformQueryNames: String.camelToSnake,
+            transformResultNames: String.snakeToCamel,
+          }),
+        )
+
+        if (!seed || !seed.start || !Effect.isEffect(seed.start)) {
+          return yield* Effect.dieMessage('seed failed')
+        }
+
+        yield* seed.start.pipe(
+          Effect.provide(SeedLive),
+          Effect.withSpan('db.execute-d1-seed', {
+            attributes: {
+              projectName: workspace.projectName,
+              database: subcommand.database || 'default',
+              dbBinding,
+              seedPath,
+            },
+          }),
+        )
+      }),
+      (miniflare, exit) => {
+        if (Exit.isFailure(exit)) {
+          return Effect.promise(() => miniflare.dispose()).pipe(Effect.tap(Effect.logError(exit.cause)), Effect.ignore)
+        }
+        return Effect.promise(() => miniflare.dispose()).pipe(Effect.ignore)
+      },
     )
 
-    if (!seed || !seed.start || !Effect.isEffect(seed.start)) {
-      return yield* Effect.dieMessage('seed failed')
-    }
-
-    yield* seed.start.pipe(
-      Effect.provide(SeedLive),
-      Effect.acquireRelease(() => Effect.promise(() => dev.dispose())),
-      Effect.withSpan('db.execute-d1-seed', {
-        attributes: {
-          projectName: workspace.projectName,
-          database: subcommand.database || 'default',
-          dbBinding,
-          seedPath,
-        },
-      }),
-    )
+    return
   } else if (config.runtime === 'server') {
     // TODO: implement
     return yield* Effect.dieMessage('Not support seed in server')
   }
 
   yield* Effect.logInfo('Seed database done')
+  return
 })
 
 export const dump = Effect.fn('db.dump')(function* (
@@ -630,15 +760,12 @@ export const dump = Effect.fn('db.dump')(function* (
 ) {
   const path = yield* Path.Path
   const fs = yield* FileSystem.FileSystem
-  const { dbDir, config } = yield* detectDatabase(workspace)
+  const { dbDir, config } = yield* detectDatabase(workspace, { databaseName: subcommand.database })
 
-  if (config.runtime === 'browser' || config.runtime === 'server') {
+  if (config.runtime === 'd1') {
+    yield* dumpD1(workspace, subcommand)
+  } else if (config.runtime === 'browser' || config.runtime === 'server') {
     if (config.provider === 'sqlite') {
-      // sqlite export
-      if (!config.url) {
-        return yield* Effect.dieMessage('Missing database url')
-      }
-
       const _formatSchema = Effect.gen(function* () {
         const content = yield* fs.readFileString(schemaOutput)
 
@@ -652,13 +779,11 @@ export const dump = Effect.fn('db.dump')(function* (
         )
       })
 
-      // "file:./xxx.db"
-      const dbUrl = config.url.replace('file:', '').replaceAll(`"`, '')
-      const dbFile = path.join(dbDir, dbUrl)
+      const localDevDbFile = path.join(dbDir, devDB)
       const schemaOutput = path.join(dbDir, 'schema.sql')
 
       const output = yield* shell`
-        $ sqlite3 ${dbFile} .schema
+        $ sqlite3 ${localDevDbFile} .schema
       `
 
       if (output.stderr) {
@@ -682,15 +807,13 @@ export const dump = Effect.fn('db.dump')(function* (
         yield* fs.writeFileString(schemaOutput, `-- ${getMigrationDate()}\n${newFileContent}`)
 
         yield* Effect.logInfo('Dump sqlite schema done').pipe(
-          Effect.annotateLogs('file', dbFile),
+          Effect.annotateLogs('file', localDevDbFile),
           Effect.annotateLogs('output', schemaOutput),
         )
       }
     } else {
       yield* Effect.logError('Not support database dump')
     }
-  } else if (config.runtime === 'd1') {
-    yield* d1Dump(workspace, subcommand)
   }
 
   yield* Effect.logInfo('Dump database schema done').pipe(Effect.annotateLogs('provider', config.provider))
@@ -700,86 +823,90 @@ export const push = Effect.fn('db.push')(function* (
   workspace: Workspace.Workspace,
   subcommand: DatabasePushSubcommand,
 ) {
-  const { config, tables, dbDir } = yield* detectDatabase(workspace)
-  const { prismaPath, prisma } = yield* syncPrismaSchema(workspace, { dbDir }, config, tables)
+  const path = yield* Path.Path
+  const { config, tables, dbDir } = yield* detectDatabase(workspace, {
+    databaseName: subcommand.database,
+  })
 
-  const schemaContext = yield* Effect.promise(() =>
-    loadSchemaContext({
-      schemaPathFromConfig: prismaPath,
-    }),
-  )
+  yield* syncPrismaSchema(workspace, { dbDir }, config, tables)
+
+  const schemaContext = yield* Effect.promise(() => loadSchemaContext({ schemaPath: { baseDir: dbDir }, cwd: dbDir }))
 
   if (config.runtime === 'd1') {
-    yield* d1Reset(workspace, { database: subcommand.database })
+    const { databaseFile } = yield* getWranglerConfig(workspace, {
+      database: subcommand.database,
+    })
+
+    yield* resetD1(workspace, { database: subcommand.database })
 
     const from_: EngineArgs.MigrateDiffTarget = {
       tag: 'empty',
     }
     const to_: EngineArgs.MigrateDiffTarget = {
       tag: 'schemaDatamodel',
-      files: [
-        {
-          path: prismaPath,
-          content: prisma,
-        },
-      ],
+      files: schemaContext.schemaFiles.map((loadedFile) => {
+        return {
+          path: loadedFile[0],
+          content: loadedFile[1],
+        }
+      }),
     }
+    const d1DbPath = `file:${databaseFile}`
+    const shadowDatabaseUrl = `file:${path.join(dbDir, devDB)}`
 
-    const captureStdout = new CaptureStdout()
-    captureStdout.startCapture()
-    let captureOutput: any
-    yield* Effect.acquireUseRelease(
-      Effect.promise(() => Migrate.setup({ schemaContext, configDir: dbDir, schemaEngineConfig: {} })),
-      (migrate) =>
-        Effect.promise(() =>
-          migrate.engine.migrateDiff({
-            from: from_,
-            to: to_,
-            script: true,
-            exitCode: false,
-            shadowDatabaseUrl: `./${devDB}`,
-            filters: {
-              externalEnums: [],
-              externalTables: [],
+    const captureOutput = yield* Effect.acquireUseRelease(
+      Effect.gen(function* () {
+        const captureStdout = new CaptureStdout()
+        const migrate = yield* Effect.promise(() =>
+          SchemaEngineCLI.setup({
+            schemaContext,
+            baseDir: dbDir,
+            datasource: {
+              url: d1DbPath,
+              shadowDatabaseUrl: shadowDatabaseUrl,
             },
           }),
-        ),
-      (migrate, exit) => {
-        if (Exit.isFailure(exit)) {
-          return Effect.try(() => migrate.stop()).pipe(
-            Effect.tap(Effect.logError(exit.cause)),
-            Effect.ignore,
-            Effect.tap(() => {
-              captureStdout.stopCapture()
+        )
+        captureStdout.startCapture()
+
+        return { migrate, captureStdout }
+      }),
+      ({ migrate, captureStdout }) =>
+        Effect.gen(function* () {
+          yield* Effect.promise(() =>
+            migrate.migrateDiff({
+              from: from_,
+              to: to_,
+              script: true,
+              exitCode: false,
+              shadowDatabaseUrl,
+              filters: {
+                externalEnums: [],
+                externalTables: [],
+              },
             }),
           )
+          const texts = captureStdout.getCapturedText()
+          captureStdout.stopCapture()
+          return texts
+        }),
+      ({ migrate, captureStdout }, exit) => {
+        captureStdout.stopCapture()
+        if (Exit.isFailure(exit)) {
+          return Effect.try(() => migrate.stop()).pipe(Effect.tap(Effect.logError(exit.cause)), Effect.ignore)
         }
 
-        return Effect.try(() => migrate.stop()).pipe(
-          Effect.tap(() => {
-            const text = captureStdout.getCapturedText()
-            captureStdout.stopCapture()
-
-            if (!text) {
-              return Effect.dieMessage('Failed to migrate diff database')
-            }
-
-            captureOutput = text
-          }),
-          Effect.ignore,
-        )
+        return Effect.try(() => migrate.stop()).pipe(Effect.ignore)
       },
     )
 
-    const ensureOutputs = captureOutput
-      ? captureOutput.filter((_: any) => {
-          if (_.indexOf('empty migration') > -1) {
-            return false
-          }
+    const ensureOutputs = captureOutput.filter((_: any) => {
+      if (_.indexOf('empty migration') > -1) {
+        return false
+      }
 
-          return true
-        })
-      : []
+      return true
+    })
 
     if (ensureOutputs.length === 0) {
       yield* Effect.logInfo('No migrations diff')
@@ -787,37 +914,64 @@ export const push = Effect.fn('db.push')(function* (
       return
     }
 
-    yield* d1Push(workspace, {
+    yield* pushD1(workspace, {
       sql: ensureOutputs.join('\n'),
       database: subcommand.database,
     })
+
+    return
   } else {
-    /**
-     * - 重置数据库
-     * - Push （用最新的 schema.prisma 对比 Empty State 生成迁移并执行，不会产生 migration 记录）
-     */
+    // browser/server
+    const datasource =
+      config.runtime === 'server'
+        ? {
+            url: config.url,
+          }
+        : {
+            url: `file:${path.join(dbDir, devDB)}`,
+          }
+    const prismaFilter = { externalEnums: [], externalTables: [] }
+
     yield* Effect.acquireUseRelease(
-      Effect.promise(() => Migrate.setup({ schemaContext, configDir: dbDir, schemaEngineConfig: {} })),
+      Effect.promise(() =>
+        SchemaEngineCLI.setup({
+          schemaContext,
+          baseDir: dbDir,
+          datasource,
+        }),
+      ),
       (migrate) =>
-        Effect.tryPromise(() => migrate.reset()).pipe(
+        pipe(
+          Effect.tryPromise(() => migrate.reset({ filter: prismaFilter })),
           Effect.andThen(
             Effect.tryPromise(() => {
-              const output = migrate.push({ force: true }) as Promise<{
-                executedSteps: number
-                warnings: string[]
-                unexecutable: string[]
-              }>
-
+              const output = migrate.schemaPush({
+                filters: prismaFilter,
+                force: true,
+                schema: {
+                  files: schemaContext.schemaFiles.map((loadedFile) => {
+                    return {
+                      path: loadedFile[0],
+                      content: loadedFile[1],
+                    }
+                  }),
+                },
+              })
               return output
             }),
           ),
-          Effect.tap((result) => Effect.logInfo('Force push done').pipe(Effect.annotateLogs(result))),
+          Effect.tap((result) =>
+            Effect.logInfo('Force push done').pipe(
+              Effect.annotateLogs({
+                ...result,
+              }),
+            ),
+          ),
         ),
       (migrate, exit) => {
         if (Exit.isFailure(exit)) {
           return Effect.try(() => migrate.stop()).pipe(Effect.tap(Effect.logError(exit.cause)), Effect.ignore)
         }
-
         return Effect.try(() => migrate.stop()).pipe(Effect.ignore)
       },
     )
@@ -845,28 +999,21 @@ export const execute = Effect.fn('db.execute')(function* (
 ) {
   const fs = yield* FileSystem.FileSystem
   const path = yield* Path.Path
-  const { config } = yield* detectDatabase(workspace)
-  const dbDir = path.join(workspace.projectPath, 'db')
-  const prismaPath = path.join(workspace.projectPath, dbDir, 'schema.prisma')
-  const prisma = yield* fs.readFileString(prismaPath)
+  const { config, dbDir } = yield* detectDatabase(workspace, { databaseName: subcommand.database })
 
-  const schemaContext = yield* Effect.promise(() =>
-    loadSchemaContext({
-      schemaPathFromConfig: prismaPath,
-    }),
-  )
+  const schemaContext = yield* Effect.promise(() => loadSchemaContext({ schemaPath: { baseDir: dbDir }, cwd: dbDir }))
 
   if (config.runtime === 'd1') {
-    const { persistRoot, wranglerConfigPath, databaseName } = yield* wranglerConfig(workspace, {
+    const { persistRoot, wranglerConfigPath, databaseName } = yield* getWranglerConfig(workspace, {
       database: subcommand.database,
     })
 
     let args = `--local --persist-to=${persistRoot} --config=${wranglerConfigPath} --json`
-    if (subcommand.file) {
-      args += ` --file=${subcommand.file}`
-    }
+
     if (subcommand.sql) {
-      args += ` --command="${subcommand}`
+      args += ` --command="${subcommand.sql}`
+    } else if (subcommand.file) {
+      args += ` --file=${subcommand.file}`
     }
 
     const output = yield* shell`
@@ -902,38 +1049,49 @@ export const execute = Effect.fn('db.execute')(function* (
         }),
       )
     }
-  } else if (config.runtime === 'browser') {
-    yield* Effect.logInfo('Skip browser database execute')
-  } else if (config.runtime === 'server') {
-    // TODO: more test
-    let script = ''
+  } else {
+    let executeScript = ''
     if (subcommand.sql) {
-      script = subcommand.sql
-    }
-    if (subcommand.file) {
+      executeScript = subcommand.sql
+    } else if (subcommand.file) {
       const inputPath = path.isAbsolute(subcommand.file)
         ? subcommand.file
         : path.resolve(process.cwd(), subcommand.file)
 
-      script = yield* fs.readFileString(inputPath)
+      executeScript = yield* fs.readFileString(inputPath)
     }
 
     const datasourceType: EngineArgs.DbExecuteDatasourceType = {
       tag: 'schema',
-      files: [{ path: prismaPath, content: prisma }],
-      configDir: path.dirname(prismaPath),
+      files: schemaContext.schemaFiles.map((loadedFile) => {
+        return {
+          path: loadedFile[0],
+          content: loadedFile[1],
+        }
+      }),
+      configDir: dbDir,
     }
 
+    const datasource =
+      config.runtime === 'server'
+        ? {
+            url: config.url,
+          }
+        : {
+            url: `file:${path.join(dbDir, devDB)}`,
+          }
+
     yield* Effect.acquireUseRelease(
-      Effect.promise(() => Migrate.setup({ schemaContext, configDir: dbDir, schemaEngineConfig: {} })),
+      Effect.promise(() => SchemaEngineCLI.setup({ schemaContext, baseDir: dbDir, datasource })),
       (migrate) =>
         Effect.promise(() =>
-          migrate.engine.dbExecute({
-            script,
+          migrate.dbExecute({
+            script: executeScript,
             datasourceType,
           }),
         ),
       (migrate, exit) => {
+        console.log(exit)
         if (Exit.isFailure(exit)) {
           return Effect.try(() => migrate.stop()).pipe(Effect.tap(Effect.logError(exit.cause)), Effect.ignore)
         }
@@ -953,30 +1111,27 @@ export const dev = Effect.fn('db.dev')(function* (
   subcommand: DatabaseMigrateDevSubcommand,
 ) {
   const path = yield* Path.Path
-  const { config, tables, dbDir, migrationsDir } = yield* detectDatabase(workspace)
-  const { prisma, prismaPath } = yield* syncPrismaSchema(workspace, { dbDir }, config, tables)
+  const { config, tables, dbDir, migrationsDir } = yield* detectDatabase(workspace, {
+    databaseName: subcommand.database,
+  })
   const migrations = yield* getMigrations(migrationsDir)
 
-  const schemaContext = yield* Effect.promise(() =>
-    loadSchemaContext({
-      schemaPathFromConfig: prismaPath,
-    }),
-  )
+  yield* syncPrismaSchema(workspace, { dbDir }, config, tables)
 
-  // 从什么地方开始迁移
+  const schemaContext = yield* Effect.promise(() => loadSchemaContext({ schemaPath: { baseDir: dbDir }, cwd: dbDir }))
+
+  const localDevDb = `file:${path.join(dbDir, devDB)}`
+  const localDevShadowDb = `file:${path.join(dbDir, 'shadow.db')}`
+
+  // 全新的数据库
   let from_: EngineArgs.MigrateDiffTarget = {
     tag: 'empty',
   }
 
-  // 全新的数据库
-  if (migrations.length === 0) {
-    from_ = {
-      tag: 'empty',
-    }
-  } else {
+  if (migrations.length > 0) {
     // 从已有的 D1 sqlite 数据库迁移
     if (config.runtime === 'd1') {
-      const { databaseFile } = yield* wranglerConfig(workspace, {
+      const { databaseFile } = yield* getWranglerConfig(workspace, {
         database: subcommand.database,
       })
 
@@ -985,13 +1140,11 @@ export const dev = Effect.fn('db.dev')(function* (
         url: `file:${databaseFile}`,
       }
     } else if (config.runtime === 'browser') {
-      // 如果是 Browser 则用不到本地数据库默认 dev 数据库
-      const localDBUrl = config.url ? config.url.replace('file:', '').replaceAll(`"`, '') : devDB
-      const db = path.join(dbDir, localDBUrl)
+      // 如果是 Browser 则用使用 dev 数据库
 
       from_ = {
         tag: 'url',
-        url: `file:${db}`,
+        url: localDevDb,
       }
     } else if (config.runtime === 'server') {
       if (!config.url) {
@@ -1008,60 +1161,55 @@ export const dev = Effect.fn('db.dev')(function* (
   // 用 schema.prisma 作为目标进行迁移
   const to_: EngineArgs.MigrateDiffTarget = {
     tag: 'schemaDatamodel',
-    files: [
-      {
-        path: prismaPath,
-        content: prisma,
-      },
-    ],
+    files: schemaContext.schemaFiles.map((loadedFile) => {
+      return {
+        path: loadedFile[0],
+        content: loadedFile[1],
+      }
+    }),
   }
 
-  const captureStdout = new CaptureStdout()
-  captureStdout.startCapture()
-  let captureOutput: any
+  const datasource = { url: from_.tag === 'empty' ? localDevDb : from_.url }
 
-  yield* Effect.acquireUseRelease(
-    Effect.promise(() => Migrate.setup({ schemaContext, configDir: dbDir, schemaEngineConfig: {} })),
-    (migrate) =>
-      Effect.promise(() =>
-        migrate.engine.migrateDiff({
-          from: from_,
-          to: to_,
-          script: true,
-          exitCode: false,
-          shadowDatabaseUrl: `./${devDB}`,
-          filters: {
-            externalEnums: [],
-            externalTables: [],
-          },
-        }),
-      ),
-    (migrate, exit) => {
-      if (Exit.isFailure(exit)) {
-        return Effect.try(() => migrate.stop()).pipe(
-          Effect.tap(Effect.logError(exit.cause)),
-          Effect.ignore,
-          Effect.tap(() => {
-            const text = captureStdout.getCapturedText()
-            captureStdout.stopCapture()
-
-            if (!text) {
-              return Effect.dieMessage('Failed to migrate diff database')
-            }
-          }),
-        )
-      }
-
-      return Effect.try(() => migrate.stop()).pipe(
-        Effect.ignore,
-        Effect.map(() => {
-          const text = captureStdout.getCapturedText()
-          captureStdout.stopCapture()
-          captureOutput = text
-
-          return text
+  const captureOutput = yield* Effect.acquireUseRelease(
+    Effect.gen(function* () {
+      const captureStdout = new CaptureStdout()
+      const migrate = yield* Effect.promise(() =>
+        SchemaEngineCLI.setup({
+          schemaContext,
+          baseDir: dbDir,
+          datasource,
         }),
       )
+      captureStdout.startCapture()
+
+      return { migrate, captureStdout }
+    }),
+    ({ migrate, captureStdout }) =>
+      Effect.gen(function* () {
+        yield* Effect.promise(() =>
+          migrate.migrateDiff({
+            from: from_,
+            to: to_,
+            script: true,
+            exitCode: false,
+            shadowDatabaseUrl: localDevShadowDb,
+            filters: {
+              externalEnums: [],
+              externalTables: [],
+            },
+          }),
+        )
+        const text = captureStdout.getCapturedText()
+        captureStdout.stopCapture()
+        return text
+      }),
+    ({ migrate }, exit) => {
+      if (Exit.isFailure(exit)) {
+        return Effect.try(() => migrate.stop()).pipe(Effect.tap(Effect.logError(exit.cause)), Effect.ignore)
+      }
+
+      return Effect.try(() => migrate.stop()).pipe(Effect.ignore)
     },
   )
 
@@ -1113,15 +1261,15 @@ export const dev = Effect.fn('db.dev')(function* (
    * Apply migrations
    */
   if (config.runtime === 'd1') {
-    yield* d1ApplyMigrations(workspace, { database: subcommand.database })
+    yield* applyD1Migrations(workspace, { database: subcommand.database })
   } else if (config.runtime === 'browser') {
-    yield* prismaApplyMigrations(workspace, { dbDir })
+    yield* applyPrismaMigrations(workspace, { datasource, dbDir, migrations })
   } else if (config.runtime === 'server') {
     const databaseUrl = config.url
     if (!databaseUrl) {
       return yield* Effect.dieMessage('Database url is required')
     }
-    yield* prismaApplyMigrations(workspace, { dbDir })
+    yield* applyPrismaMigrations(workspace, { datasource, dbDir, migrations })
   }
 
   yield* Effect.logInfo('Migrate database done')
@@ -1144,15 +1292,24 @@ export const reset = Effect.fn('db.reset')(function* (
   workspace: Workspace.Workspace,
   subcommand: DatabaseMigrateResetSubcommand,
 ) {
-  const { config, dbDir } = yield* detectDatabase(workspace)
+  const path = yield* Path.Path
+  const { config, dbDir, migrationsDir } = yield* detectDatabase(workspace, {
+    databaseName: subcommand.database,
+  })
+  const migrations = yield* getMigrations(migrationsDir)
 
   if (config.runtime === 'd1') {
-    yield* d1Reset(workspace, { database: subcommand.database })
-    yield* d1ApplyMigrations(workspace, { database: subcommand.database })
+    yield* applyD1Migrations(workspace, { database: subcommand.database, reset: true })
   } else if (config.runtime === 'browser') {
-    yield* prismaApplyMigrations(workspace, { dbDir }, { reset: true })
+    const datasource = {
+      url: `file:${path.join(dbDir, devDB)}`,
+    }
+    yield* applyPrismaMigrations(workspace, { dbDir, datasource, migrations, reset: true })
   } else if (config.runtime === 'server') {
-    yield* prismaApplyMigrations(workspace, { dbDir }, { reset: true })
+    const datasource = {
+      url: config.url,
+    }
+    yield* applyPrismaMigrations(workspace, { dbDir, datasource, migrations, reset: true })
   }
 
   yield* Effect.logInfo('Reset database done')
@@ -1171,8 +1328,9 @@ export const deploy = Effect.fn('db.deploy')(function* (
   workspace: Workspace.Workspace,
   subcommand: DatabaseMigrateDeploySubcommand,
 ) {
-  const { config, migrationsDir, dbDir } = yield* detectDatabase(workspace)
-
+  const { config, migrationsDir, dbDir } = yield* detectDatabase(workspace, {
+    databaseName: subcommand.database,
+  })
   const migrations = yield* getMigrations(migrationsDir)
 
   if (migrations.length === 0) {
@@ -1180,14 +1338,14 @@ export const deploy = Effect.fn('db.deploy')(function* (
   }
 
   if (config.runtime === 'd1') {
-    yield* d1ApplyMigrations(workspace, {
-      deploy: true,
-      database: subcommand.database,
-    })
+    yield* applyD1Migrations(workspace, { database: subcommand.database, deploy: true })
   } else if (config.runtime === 'browser') {
     yield* Effect.logInfo('Skip browser database deploy')
   } else if (config.runtime === 'server') {
-    yield* prismaApplyMigrations(workspace, { dbDir })
+    const datasource = {
+      url: config.url,
+    }
+    yield* applyPrismaMigrations(workspace, { dbDir, datasource, migrations })
   }
 
   yield* Effect.logInfo('Deploy database done')

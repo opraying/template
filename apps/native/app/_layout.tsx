@@ -3,12 +3,13 @@ import { Live } from '@client/native-context'
 import { Boot } from '@xstack/app/components/boot'
 import { NavigationProvider } from '@xstack/router/provider'
 import { Stack } from 'expo-router'
+import { HotUpdater, getUpdateSource } from '@hot-updater/react-native'
 
 export const unstable_settings = {
   anchor: '(tabs)',
 }
 
-export default function RootLayout() {
+function RootLayout() {
   return (
     <Layout>
       <Stack>
@@ -27,3 +28,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
     </NavigationProvider>
   )
 }
+export default HotUpdater.wrap({
+  source: getUpdateSource('https://hot-updater.opraying.workers.dev/api/check-update', {
+    updateStrategy: 'fingerprint',
+  }),
+})(RootLayout)

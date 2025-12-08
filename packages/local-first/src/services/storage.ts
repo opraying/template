@@ -36,32 +36,31 @@ export class LocalFirstStorageService extends Effect.Service<LocalFirstStorageSe
   }
 }
 
-const useStorageService = UseUseServices({ LocalFirstStorageService })(({
-  runtime,
-  services: { LocalFirstStorageService },
-}) => {
-  const export_ = runtime.fn((options?: { filename?: string }) =>
-    Effect.gen(function* () {
-      const blob = yield* LocalFirstStorageService.export()
+const useStorageService = UseUseServices({ LocalFirstStorageService })(
+  ({ runtime, services: { LocalFirstStorageService } }) => {
+    const export_ = runtime.fn((options?: { filename?: string }) =>
+      Effect.gen(function* () {
+        const blob = yield* LocalFirstStorageService.export()
 
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = options?.filename || 'db.sqlite'
-      a.click()
-    }),
-  )
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = options?.filename || 'db.sqlite'
+        a.click()
+      }),
+    )
 
-  const import_ = runtime.fn((_: File) =>
-    Effect.gen(function* () {
-      const arrayBuffer = yield* Effect.promise(() => _.arrayBuffer())
-      const uint8Array = new Uint8Array(arrayBuffer)
-      yield* LocalFirstStorageService.import(uint8Array)
-    }),
-  )
+    const import_ = runtime.fn((_: File) =>
+      Effect.gen(function* () {
+        const arrayBuffer = yield* Effect.promise(() => _.arrayBuffer())
+        const uint8Array = new Uint8Array(arrayBuffer)
+        yield* LocalFirstStorageService.import(uint8Array)
+      }),
+    )
 
-  return {
-    import: import_,
-    export: export_,
-  }
-})
+    return {
+      import: import_,
+      export: export_,
+    }
+  },
+)

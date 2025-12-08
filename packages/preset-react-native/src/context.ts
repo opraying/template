@@ -169,7 +169,7 @@ export const make = <LA = never>(
       )
 
       // @ts-ignore
-      globalThis.patchEnv = options.envPatch ?? (() => { })
+      globalThis.patchEnv = options.envPatch ?? (() => {})
     }),
   )
 
@@ -196,12 +196,12 @@ export const make = <LA = never>(
       // Convert RequestInit to FetchRequestInit
       const fetchInit = init
         ? {
-          body: init.body,
-          credentials: init.credentials,
-          headers: init.headers,
-          method: init.method,
-          signal: init.signal,
-        }
+            body: init.body,
+            credentials: init.credentials,
+            headers: init.headers,
+            method: init.method,
+            signal: init.signal,
+          }
         : undefined
 
       return ExpoFetch(url, fetchInit as any) as unknown as Promise<Response>
@@ -318,9 +318,10 @@ const Test = Layer.scopedDiscard(
       Option.some(Redacted.make('7w3jnwsw3j24xsvvxfvssk6pxuhcuwiut5u5hudc')),
     )
 
-    yield* identity.importFromMnemonic(
-      Redacted.make('motor royal future decade cousin modify phone roast empty village treat modify'),
-    ).pipe(
-      Effect.forkScoped)
+    yield* identity
+      .importFromMnemonic(
+        Redacted.make('motor royal future decade cousin modify phone roast empty village treat modify'),
+      )
+      .pipe(Effect.forkScoped)
   }),
 )

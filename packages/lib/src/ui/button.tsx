@@ -55,8 +55,7 @@ const buttonGroupVariants = cva(
   },
 )
 export interface ButtonGroupProps
-  extends React.ComponentPropsWithRef<'div'>,
-    VariantProps<typeof buttonGroupVariants> {}
+  extends React.ComponentPropsWithRef<'div'>, VariantProps<typeof buttonGroupVariants> {}
 
 const ButtonGroup = ({ className, direction, ...props }: ButtonGroupProps) => {
   return <div className={cn(buttonGroupVariants({ className, direction }))} {...props} />

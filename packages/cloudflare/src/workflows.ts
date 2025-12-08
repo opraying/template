@@ -704,7 +704,9 @@ export const runEffectWorkflow = <A, I, E = never>(
                   }),
                 ),
                 catchAll({ decode: decodeExit }),
-                Effect.withSpan('Workflows.doSchema', { attributes: { label: SchemaClass.identifier } }),
+                Effect.withSpan('Workflows.doSchema', {
+                  attributes: { label: SchemaClass.identifier },
+                }),
               )
 
               return run as any

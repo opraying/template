@@ -5,6 +5,6 @@
     "noEmit": false,
     "declarationMap": true,
     "declaration": true,
-    "allowImportingTsExtensions": false
-  }
+    "allowImportingTsExtensions": false,
+  },
 }

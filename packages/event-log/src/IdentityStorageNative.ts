@@ -36,9 +36,9 @@ const makeNativeStorage = Effect.gen(function* () {
         const dbPath = db.getDbPath()
 
         return Effect.sync(() => {
-          const file = new ExpoFileSystem.File(dbPath);
-          const info = file.info();
-          return info.exists ? info.size??0 : 0;
+          const file = new ExpoFileSystem.File(dbPath)
+          const info = file.info()
+          return info.exists ? (info.size ?? 0) : 0
         })
       }),
       Effect.scoped,

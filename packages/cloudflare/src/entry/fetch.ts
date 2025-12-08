@@ -172,7 +172,9 @@ export class CloudflareFetchHandle extends Context.Tag('@cloudflare:fetch-handle
         }
       }
 
-      const [app, rt] = yield* Effect.all([HttpApiBuilder.httpApp, runtime.runtimeEffect], { concurrency: 'unbounded' })
+      const [app, rt] = yield* Effect.all([HttpApiBuilder.httpApp, runtime.runtimeEffect], {
+        concurrency: 'unbounded',
+      })
 
       const webHandle = HttpApp.toWebHandlerRuntime(rt)(
         pipe(

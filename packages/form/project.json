@@ -8,7 +8,7 @@
       "executor": "nx:run-commands",
       "outputs": ["{workspaceRoot}/node_modules/.vitest/packages/form", "{workspaceRoot}/coverage/packages/form"],
       "options": {
-        "command": "pnpm xdev test --project pkgs-form"
+        "command": "xdev test --project pkgs-form"
       }
     },
     "madge": {

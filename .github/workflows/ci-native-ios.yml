@@ -48,12 +48,85 @@ jobs:
 
       - name: 🔍 Detect surface
         id: detect
-        run: pnpm tsx scripts/detect-ci-surfaces.ts --surface native-ios --format github
+        run: tsx scripts/ci/detect-surfaces.ts --surface native-ios --format github
+
+  fingerprint:
+    name: Fingerprint diff (ios)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      requires_release: ${{ steps.fp.outputs.requires_release }}
+      head_hash: ${{ steps.fp.outputs.head_hash }}
+      base_hash: ${{ steps.fp.outputs.base_hash }}
+      fallback_reason: ${{ steps.fp.outputs.fallback_reason }}
+      head_sources: ${{ steps.fp.outputs.head_sources }}
+      base_sources: ${{ steps.fp.outputs.base_sources }}
+    steps:
+      - name: ⬇️ Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: 🚧 Setup workspace
+        uses: ./.github/actions/setup
+
+      - name: 🔐 Native fingerprint
+        id: fp
+        shell: bash
+        run: |
+          set -euo pipefail
+          tsx scripts/ci/native-fingerprint.ts --platform ios --output fingerprint-ios.json | tee fingerprint-ios.log
+          require_release=$(jq -r '.requiresStoreRelease' fingerprint-ios.json)
+          head_hash=$(jq -r '.headHash' fingerprint-ios.json)
+          base_hash=$(jq -r '.baseHash // ""' fingerprint-ios.json)
+          fallback_reason=$(jq -r '.fallbackReason // ""' fingerprint-ios.json)
+          head_sources=$(jq -r 'if .headFingerprint then (.headFingerprint.sources | length) else 0 end' fingerprint-ios.json)
+          base_sources=$(jq -r 'if .baseFingerprint then (.baseFingerprint.sources | length) else 0 end' fingerprint-ios.json)
+          {
+            echo "requires_release=${require_release}"
+            echo "head_hash=${head_hash}"
+            echo "base_hash=${base_hash}"
+            echo "fallback_reason=${fallback_reason}"
+            echo "head_sources=${head_sources}"
+            echo "base_sources=${base_sources}"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: 📤 Upload fingerprint artifact
+        uses: actions/upload-artifact@v5
+        with:
+          name: ios-fingerprint
+          path: fingerprint-ios.json
+          retention-days: 7
+
+  classify:
+    name: Determine native build need
+    runs-on: ubuntu-latest
+    needs: [detect, fingerprint]
+    outputs:
+      build_native: ${{ steps.compute.outputs.build_native }}
+    steps:
+      - name: Decide build
+        id: compute
+        shell: bash
+        run: |
+          set -euo pipefail
+          build_native=false
+          if [[ "${{ needs.detect.outputs.impacted }}" == 'true' ]]; then
+            build_native=true
+          fi
+          if [[ "${{ needs.fingerprint.outputs.requires_release }}" == 'true' ]]; then
+            build_native=true
+          fi
+          if [[ "${{ github.event_name }}" == 'workflow_dispatch' ]]; then
+            build_native=true
+          fi
+          echo "build_native=${build_native}" >> "$GITHUB_OUTPUT"
+          printf 'build_native=%s\n' "$build_native"
 
   build:
     name: Build iOS artifact
-    needs: detect
-    if: needs.detect.outputs.impacted == 'true' && github.secret_source != 'None'
+    needs: [classify]
+    if: needs.classify.outputs.build_native == 'true' && github.secret_source != 'None'
     runs-on: macos-latest
     timeout-minutes: 120
     env:
@@ -88,7 +161,7 @@ jobs:
           token: ${{ secrets.EXPO_TOKEN }}
 
       - name: 🏗️ Run iOS stage
-        run: pnpm tsx scripts/run-ci-stage.ts --stage native-ios --platform macos
+        run: tsx scripts/run-ci-stage.ts --stage native-ios --platform macos
 
       - name: 📦 Package artifact
         id: package
@@ -115,8 +188,8 @@ jobs:
 
   skip:
     name: Nothing to build
-    needs: detect
-    if: needs.detect.outputs.impacted != 'true'
+    needs: classify
+    if: needs.classify.outputs.build_native != 'true'
     runs-on: ubuntu-latest
     steps:
       - run: echo "No iOS-related Nx projects changed. Skipping builds."

@@ -34,7 +34,10 @@ export function useToasterContext(): ToasterMethods {
 
 function createNoOpToaster(): ToasterMethods {
   const noOp = (message?: any, data?: any) => {
-    console.warn('Toaster method called but no valid toaster implementation is available', { message, data })
+    console.warn('Toaster method called but no valid toaster implementation is available', {
+      message,
+      data,
+    })
     return 0
   }
 

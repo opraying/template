@@ -28,9 +28,9 @@ export const Live = Layer.effect(
         // Get internal SQL database size
         const internalDbPath = yield* sql.extra.getDbPath()
         const internalDbSize = yield* Effect.sync(() => {
-          const file = new ExpoFileSystem.File(internalDbPath);
-          const info = file.info();
-          return info.exists ? info.size??0 : 0;
+          const file = new ExpoFileSystem.File(internalDbPath)
+          const info = file.info()
+          return info.exists ? (info.size ?? 0) : 0
         })
 
         // Get external database size

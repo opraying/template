@@ -57,14 +57,14 @@ const makeWriteableAtom: {
   <A, I, E = never>(
     schema: Schema.Schema<A, I>,
     readOrWriteFn: ReadOrWriteEffect<A, I, E>,
-  ): Atom.Writable<Result.Result<A, E>, typeof Atom.Reset | Option.Option<FormSubmitData<A>>>
+  ): Atom.Writable<Result.Result<A, E>, typeof Atom.Reset | Option.Option<FormSubmitData<A>>>;
   /**
    * rx writable
    */
   <A, I, E = never>(
     schema: Schema.Schema<A, I>,
     rx: Atom.AtomResultFn<A, A, E>,
-  ): Atom.Writable<Result.Result<A, E>, typeof Atom.Reset | Option.Option<FormSubmitData<A>>>
+  ): Atom.Writable<Result.Result<A, E>, typeof Atom.Reset | Option.Option<FormSubmitData<A>>>;
   /**
    * promise writable
    */
@@ -157,14 +157,14 @@ export const useSchemaForm: {
   <A extends FieldValues, I = A, E = never>(
     schema: Schema.Schema<A, I>,
     readOrWrite: ReadOrWriteEffect<A, I, E>,
-  ): Simplify<SchemaForm<A, I>>
+  ): Simplify<SchemaForm<A, I>>;
   /**
    * form schema (rx)
    */
   <A extends FieldValues, I = A, E = never>(
     schema: Schema.Schema<A, I>,
     readOrWrite: ReadOrWriteAtomFn<A, I, E>,
-  ): Simplify<SchemaForm<A, I>>
+  ): Simplify<SchemaForm<A, I>>;
   /**
    * form schema (promise)
    */

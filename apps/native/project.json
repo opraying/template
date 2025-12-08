@@ -4,6 +4,40 @@
   "sourceRoot": "apps/native",
   "projectType": "application",
   "targets": {
+    "prebuild": {
+      "executor": "nx:run-commands",
+      "options": { "command": "xdev native prebuild --cwd apps/native" }
+    },
+    "build": {
+      "configurations": {
+        "ios": {
+          "executor": "nx:run-commands",
+          "options": { "command": "xdev native build --cwd apps/native --platform ios" }
+        },
+        "android": {
+          "executor": "nx:run-commands",
+          "options": { "command": "xdev native build --cwd apps/native --platform android" }
+        }
+      },
+      "defaultConfiguration": "ios"
+    },
+    "run": {
+      "configurations": {
+        "ios": {
+          "executor": "nx:run-commands",
+          "options": { "command": "xdev native run --cwd apps/native --platform ios" }
+        },
+        "android": {
+          "executor": "nx:run-commands",
+          "options": { "command": "xdev native run --cwd apps/native --platform android" }
+        }
+      },
+      "defaultConfiguration": "ios"
+    },
+    "analyze": {
+      "executor": "nx:run-commands",
+      "options": { "command": "xdev native analyze --cwd apps/native" }
+    },
     "madge": {
       "executor": "nx:run-commands",
       "options": {
@@ -18,7 +52,5 @@
       }
     }
   },
-  "tags": [
-    "native"
-  ]
+  "tags": ["native"]
 }

@@ -1,7 +1,8 @@
 import { FileSystem, Path } from '@effect/platform'
 import { Effect } from 'effect'
 import type { Unstable_DevOptions } from 'wrangler'
-import { BuildReactRouterParameters, type BuildReactRouterTarget, type PreviewSubcommand } from '../domain'
+import { type PreviewSubcommand } from '../domain'
+import { BuildReactRouterParameters, type BuildReactRouterTarget } from './domain'
 import { Workspace } from '../workspace'
 import { unstableDev } from '../cloudflare/wrangler'
 

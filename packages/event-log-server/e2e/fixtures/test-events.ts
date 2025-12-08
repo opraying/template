@@ -59,7 +59,10 @@ export class AgentEvents extends Events.make(AgentEventGroup, {
           return Effect.gen(function* () {
             yield* Effect.log('set name from client', payload.name)
             // 将结果通过新的 Client 事件发送回去
-            yield* client('Hi', { id: Math.round(Math.random() * 1000), message: `Hi ${payload.name}` })
+            yield* client('Hi', {
+              id: Math.round(Math.random() * 1000),
+              message: `Hi ${payload.name}`,
+            })
           }).pipe(Effect.orDie)
         })
         .handle('Hi', ({ payload }) =>

@@ -17,14 +17,14 @@
       "outputs": ["{projectRoot}/.rendered"],
       "dependsOn": [],
       "options": {
-        "command": "pnpm xdev email build --cwd=apps/emails"
+        "command": "xdev email build --cwd=apps/emails"
       }
     },
     "deploy": {
       "executor": "nx:run-commands",
       "outputs": ["{projectRoot}/.rendered"],
       "options": {
-        "command": "pnpm xdev email deploy --cwd=apps/emails"
+        "command": "xdev email deploy --cwd=apps/emails"
       }
     },
     "check": {

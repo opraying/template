@@ -25,7 +25,8 @@ import { tsImport } from 'tsx/esm/api'
 import type { Connect } from 'vite'
 import { WebSocketServer, type WebSocket as WebSocketType } from 'ws'
 import { getPlatformProxy } from '../cloudflare/wrangler'
-import { BuildReactRouterParameters, type ServeSubcommand } from '../domain'
+import { type ServeSubcommand } from '../domain'
+import { BuildReactRouterParameters } from './domain'
 import { Workspace } from '../workspace'
 import { launchEditor } from './launch-editor'
 import { otelForward } from './otel-forward'
@@ -256,7 +257,7 @@ function log(out: boolean, method: string, path: string, status = 0, elapsed = '
     return Effect.logError(str)
   }
 
-  return Effect.logTrace(str)
+  return Effect.logInfo(str)
 }
 
 interface OtelWebSocketMessage {
@@ -286,7 +287,7 @@ export const start = Effect.fn('react-router.serve-start')(function* (subcommand
       tsImport(contextFilePath, { parentURL: import.meta.url, tsconfig: tsconfigPath }) as Promise<{
         contextBuilder: ReturnType<make>
       }>,
-  ).pipe(Effect.tap(Effect.logDebug('Import Context Builder')), Effect.tapErrorCause(Effect.logError), Effect.orDie)
+  ).pipe(Effect.tap(Effect.logInfo('Import Context Builder')), Effect.tapErrorCause(Effect.logError), Effect.orDie)
 
   if (!contextBuilder) {
     return yield* Effect.dieMessage('No contextBuilder function export found')
@@ -318,7 +319,7 @@ export const start = Effect.fn('react-router.serve-start')(function* (subcommand
     }),
   ).pipe(
     Effect.tapErrorCause(Effect.logError),
-    Effect.tap(Effect.logDebug('Create Vite Server')),
+    Effect.tap(Effect.logInfo('Create Vite Server')),
     Effect.withSpan('vite.createServer'),
   )
 
@@ -697,9 +698,11 @@ export const start = Effect.fn('react-router.serve-start')(function* (subcommand
 
   yield* Effect.addFinalizer(
     Effect.fn('react-router.serve-stop')(function* () {
-      yield* Effect.promise(() => viteDevServer.close())
+      yield* Effect.promise(() => viteDevServer.close()).pipe(Effect.ignore)
       yield* Effect.try(() => ws.close()).pipe(Effect.ignore)
       yield* Effect.try(() => server.close()).pipe(Effect.ignore)
+
+      yield* Effect.logInfo('Dev Server stopped 🛏️')
     }),
   )
 

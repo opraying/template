@@ -29,7 +29,9 @@ const AlertDialogContent = ({
   containerClassName,
   children,
   ...props
-}: React.ComponentPropsWithRef<typeof AlertDialogPrimitive.Content> & { containerClassName?: string | undefined }) => {
+}: React.ComponentPropsWithRef<typeof AlertDialogPrimitive.Content> & {
+  containerClassName?: string | undefined
+}) => {
   return (
     <AlertDialogPortal>
       <AlertDialogOverlay />

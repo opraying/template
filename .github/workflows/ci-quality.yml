@@ -39,11 +39,11 @@ jobs:
 
       - name: 🔍 Detect impacted lint surface
         id: detect
-        run: pnpm tsx scripts/detect-ci-surfaces.ts --surface lint --format github
+        run: tsx scripts/detect-ci-surfaces.ts --surface lint --format github
 
       - name: ✨ Run quality stage
         if: steps.detect.outputs.surface-lint == 'true'
-        run: pnpm tsx scripts/run-ci-stage.ts --stage lint
+        run: tsx scripts/run-ci-stage.ts --stage lint
 
       - name: ✅ Nothing to lint
         if: steps.detect.outputs.surface-lint != 'true'

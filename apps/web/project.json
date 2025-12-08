@@ -9,32 +9,32 @@
       "executor": "nx:run-commands",
       "outputs": ["{workspaceRoot}/dist/apps/web"],
       "options": {
-        "command": "pnpm xdev build --cwd apps/web"
+        "command": "xdev build --cwd apps/web"
       }
     },
     "app-deploy": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "pnpm xdev deploy --cwd apps/web"
+        "command": "xdev deploy --cwd apps/web"
       }
     },
     "serve": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "pnpm xdev serve --cwd apps/web"
+        "command": "xdev serve --cwd apps/web"
       }
     },
     "preview": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "pnpm xdev --tsconfig=apps/web/tsconfig.app.json preview --cwd apps/web"
+        "command": "xdev --tsconfig=apps/web/tsconfig.app.json preview --cwd apps/web"
       }
     },
     "test": {
       "executor": "nx:run-commands",
       "outputs": ["{workspaceRoot}/node_modules/.vitest/apps/web", "{workspaceRoot}/coverage/apps/web"],
       "options": {
-        "command": "pnpm xdev test --project template-web"
+        "command": "xdev test --project template-web"
       }
     },
     "madge": {

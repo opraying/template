@@ -57,5 +57,6 @@ module.exports = (api) => {
       ],
       'nativewind/babel',
     ],
+    plugins: ['hot-updater/babel-plugin'],
   }
 }

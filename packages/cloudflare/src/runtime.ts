@@ -190,7 +190,11 @@ const layer = (options: {
 
 export const runMain = <A>(
   effect: Effect.Effect<A, never, KV | S3>,
-  options: { configPath: string; run?: 'local' | 'remote' | undefined; environment?: string | undefined },
+  options: {
+    configPath: string
+    run?: 'local' | 'remote' | undefined
+    environment?: string | undefined
+  },
 ) => {
   NodeRuntime.runMain(
     Effect.provide(

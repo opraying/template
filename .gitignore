@@ -46,20 +46,16 @@ Thumbs.db
 .venv/
 
 # Expo
-node_modules/
 .expo/
-.yarn/
-npm-debug.*
 *.jks
 *.p8
 *.p12
 *.key
 *.mobileprovision
 *.orig.*
-web-build/
-cache/
-.expo
+**/.expo
 Gymfile
+**/.hot-updater/output
 
 .nx/cache
 .nx/workspace-data

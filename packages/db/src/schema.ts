@@ -199,8 +199,10 @@ export const toBool = (value: unknown) => {
  * @since 1.0.0
  * @category date & time
  */
-export interface DateTime
-  extends Schema.transform<typeof Schema.ValidDateFromSelf, typeof Schema.DateTimeUtcFromSelf> {}
+export interface DateTime extends Schema.transform<
+  typeof Schema.ValidDateFromSelf,
+  typeof Schema.DateTimeUtcFromSelf
+> {}
 
 /**
  * @since 1.0.0
@@ -365,13 +367,12 @@ export const UuidV7 = Schema.String.pipe(
  * @since 1.0.0
  * @category uuid
  */
-export interface UuidInsert<B extends string | symbol>
-  extends VariantSchema.Field<{
-    readonly select: Schema.brand<typeof Schema.String, B>
-    readonly insert: VariantSchema.Overrideable<string & Brand.Brand<B>, string>
-    readonly update: Schema.brand<typeof Schema.String, B>
-    readonly json: Schema.brand<typeof Schema.String, B>
-  }> {}
+export interface UuidInsert<B extends string | symbol> extends VariantSchema.Field<{
+  readonly select: Schema.brand<typeof Schema.String, B>
+  readonly insert: VariantSchema.Overrideable<string & Brand.Brand<B>, string>
+  readonly update: Schema.brand<typeof Schema.String, B>
+  readonly json: Schema.brand<typeof Schema.String, B>
+}> {}
 
 /**
  * @since 1.0.0
@@ -420,13 +421,12 @@ export const uuidInsert = Schema.String.pipe(
  * @since 1.0.0
  * @category uuid
  */
-export interface UuidV7Insert<B extends string | symbol>
-  extends VariantSchema.Field<{
-    readonly select: Schema.brand<typeof Schema.String, B>
-    readonly insert: VariantSchema.Overrideable<string & Brand.Brand<B>, string>
-    readonly update: Schema.brand<typeof Schema.String, B>
-    readonly json: Schema.brand<typeof Schema.String, B>
-  }> {}
+export interface UuidV7Insert<B extends string | symbol> extends VariantSchema.Field<{
+  readonly select: Schema.brand<typeof Schema.String, B>
+  readonly insert: VariantSchema.Overrideable<string & Brand.Brand<B>, string>
+  readonly update: Schema.brand<typeof Schema.String, B>
+  readonly json: Schema.brand<typeof Schema.String, B>
+}> {}
 
 /**
  * @since 1.0.0
@@ -475,13 +475,12 @@ export const uuidV7Insert = Schema.String.pipe(
  * @since 1.0.0
  * @category uuid
  */
-interface NanoIdInsert<B extends string | symbol>
-  extends VariantSchema.Field<{
-    readonly select: Schema.brand<typeof Schema.String, B>
-    readonly insert: VariantSchema.Overrideable<string & Brand.Brand<B>, string>
-    readonly update: Schema.brand<typeof Schema.String, B>
-    readonly json: Schema.brand<typeof Schema.String, B>
-  }> {}
+interface NanoIdInsert<B extends string | symbol> extends VariantSchema.Field<{
+  readonly select: Schema.brand<typeof Schema.String, B>
+  readonly insert: VariantSchema.Overrideable<string & Brand.Brand<B>, string>
+  readonly update: Schema.brand<typeof Schema.String, B>
+  readonly json: Schema.brand<typeof Schema.String, B>
+}> {}
 
 /**
  * @since 1.0.0

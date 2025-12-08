@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# 用法: ./scripts/run-nx-affected.sh 'pnpm nx affected -t madge'
+# 用法: ./scripts/run-nx-affected.sh 'nx affected -t madge'
 # 脚本会自动计算改动的文件，并用 --files 参数传给 nx affected
 
 set -e
@@ -9,7 +9,7 @@ COMMAND="$@"
 
 if [ -z "$COMMAND" ]; then
   echo "Error: No command provided" >&2
-  echo "Usage: $0 'pnpm nx affected -t <target>'" >&2
+  echo "Usage: $0 'nx affected -t <target>'" >&2
   exit 1
 fi
 

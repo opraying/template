@@ -103,7 +103,9 @@ export const getFormData = <A, I>(
 ): Effect.Effect<A, ReactRouterFormDataParseError, never> =>
   getFormDataEntries.pipe(
     Effect.flatMap((entries) => Schema.decodeUnknown(schema)(entries)),
-    Effect.catchTags({ ParseError: (error) => new ReactRouterFormDataParseError({ cause: error }) }),
+    Effect.catchTags({
+      ParseError: (error) => new ReactRouterFormDataParseError({ cause: error }),
+    }),
     Effect.withSpan('ReactRouter.decodeFormData'),
   )
 
@@ -146,7 +148,9 @@ export const getSearchParams = <A, I>(
         }),
     }).pipe(
       Effect.flatMap((_) => Schema.decodeUnknown(schema)(_)),
-      Effect.catchTags({ ParseError: (error) => new ReactRouterSearchParamsParseError({ cause: error }) }),
+      Effect.catchTags({
+        ParseError: (error) => new ReactRouterSearchParamsParseError({ cause: error }),
+      }),
       Effect.withSpan('ReactRouter.decodeSearchParams'),
     ),
   )

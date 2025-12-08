@@ -67,7 +67,7 @@ export class Github extends Context.Tag('@thing/github')<
   static Live = Layer.effect(
     this,
     Effect.gen(function* () {
-      yield* Effect.logDebug('Use octokit')
+      yield* Effect.logInfo('Use octokit')
 
       const { GITHUB_OWNER, GITHUB_REPO, GITHUB_SHA, GITHUB_TOKEN } = yield* GitConfig
 
@@ -186,7 +186,7 @@ export class Github extends Context.Tag('@thing/github')<
           |Stage:        ${stage}
           |Environment:  ${environment}`)
 
-        yield* Effect.logDebug(`Create github deployment${msg}`)
+        yield* Effect.logInfo(`Create github deployment${msg}`)
 
         return {
           deploymentId: id,

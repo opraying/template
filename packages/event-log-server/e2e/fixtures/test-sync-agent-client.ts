@@ -1,7 +1,6 @@
 import * as Reactivity from '@effect/experimental/Reactivity'
 import * as FetchHttpClient from '@effect/platform/FetchHttpClient'
 import * as Socket from '@effect/platform/Socket'
-import { NodeRuntime } from '@effect/platform-node'
 import * as NodeSqliteClient from '@effect/sql-sqlite-node/SqliteClient'
 import { CryptoLive } from '@xstack/event-log/CryptoWeb'
 import * as EventJournal from '@xstack/event-log/EventJournal'

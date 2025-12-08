@@ -82,7 +82,7 @@ function expectValue(flag: string, value: string | undefined): string {
 }
 
 function printHelp() {
-  console.log(`Usage: pnpm tsx scripts/ci/detect-surfaces.ts [options]
+  console.log(`Usage: scripts/ci/detect-surfaces.ts [options]
 
 Options:
   --surface <name>        Check a single CI surface (repeatable)
@@ -101,8 +101,11 @@ function writeGithubOutput(key: string, value: string) {
 
 function formatText(payload: SurfaceDetectionPayload) {
   const { affectedProjects, results, base, head, changedFiles } = payload
-  const header = `Detected ${affectedProjects.length} affected Nx project(s) between ${base.slice(0, 7)}...${head.slice(0, 7)}`
-  console.log(header)
+
+  console.log(
+    `Detected ${affectedProjects.length} affected Nx project(s) between ${base.slice(0, 7)}...${head.slice(0, 7)}`,
+  )
+
   for (const result of results) {
     const status = result.impacted ? 'impacted' : 'no-impact'
     const matched = result.matches.length > 0 ? ` (${result.matches.join(', ')})` : ''
@@ -124,7 +127,11 @@ function main() {
     printHelp()
     return
   }
-  const payload = detectSurfaces({ surfaces: options.surfaces, base: options.base, head: options.head })
+  const payload = detectSurfaces({
+    surfaces: options.surfaces,
+    base: options.base,
+    head: options.head,
+  })
   if (options.format === 'json') {
     console.log(JSON.stringify(payload, null, 2))
     return

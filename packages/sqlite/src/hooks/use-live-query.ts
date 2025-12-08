@@ -41,6 +41,6 @@ export const useLiveQuery: {
    * ```tsx
    * // Basic usage
    * const users = useLiveQuery<User[]>(() => sql`SELECT * FROM users`))
-   */
+   */;
   <A>(effect: Effect.Effect<A, SqlError, SqlClient.SqlClient>, options?: LiveEffectQueryOptions): CastArray<A>
 } = createQueryHooks(null as any)

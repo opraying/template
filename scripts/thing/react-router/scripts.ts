@@ -4,7 +4,7 @@ import * as traverse from '@babel/traverse'
 import { FileSystem, Path } from '@effect/platform'
 import { Config, Data, Effect } from 'effect'
 import * as R from 'remeda'
-import { shellInPath } from '../utils'
+import { shellInPath } from '../utils/shell'
 import type { Workspace } from '../workspace'
 
 type ReactRouterBuildEntry = {

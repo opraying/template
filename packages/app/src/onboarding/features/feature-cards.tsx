@@ -51,7 +51,9 @@ export const FeatureCards = ({ features }: FeatureCardsProps) => {
             <div>
               <m.h3
                 className="text-lg font-semibold mb-2"
-                style={{ color: hoveredIndex === index ? feature.color || 'var(--primary)' : 'inherit' }}
+                style={{
+                  color: hoveredIndex === index ? feature.color || 'var(--primary)' : 'inherit',
+                }}
               >
                 {feature.title}
               </m.h3>

@@ -429,7 +429,10 @@ export const effectMetricsFromSnapshot = createMetricsProcessor({
     { pattern: 'fiber_started', style: { color: COLORS.blue, label: 'Started Fibers' } },
     { pattern: 'fiber_successes', style: { color: COLORS.green, label: 'Successful Fibers' } },
     { pattern: 'fiber_failures', style: { color: COLORS.red, label: 'Failed Fibers' } },
-    { pattern: 'fiber_lifetimes', style: { color: COLORS.gray, label: 'Fiber Lifetimes', unit: 'ms' } },
+    {
+      pattern: 'fiber_lifetimes',
+      style: { color: COLORS.gray, label: 'Fiber Lifetimes', unit: 'ms' },
+    },
   ],
 })
 
@@ -439,7 +442,10 @@ export const sqlMetricsFromSnapshot = createMetricsProcessor({
     { pattern: 'query.count', style: { color: COLORS.blue, label: 'Queries' } },
     { pattern: 'query.latency', style: { label: 'Query Latency', unit: 'ms' } },
     { pattern: 'query.types', style: { label: 'Query Types' } },
-    { pattern: 'query.last.latency', style: { color: COLORS.yellow, label: 'Last Query', unit: 'ms' } },
+    {
+      pattern: 'query.last.latency',
+      style: { color: COLORS.yellow, label: 'Last Query', unit: 'ms' },
+    },
     ...DEFAULT_METRIC_PATTERNS,
   ],
 })

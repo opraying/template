@@ -45,7 +45,12 @@ async function main(): Promise<void> {
   ])
 
   await upsertSecrets({ octokit, repo, publicKey, secrets })
-  await pruneSecrets({ octokit, repo, desired: new Set(Object.keys(secrets)), remote: remoteSecretNames })
+  await pruneSecrets({
+    octokit,
+    repo,
+    desired: new Set(Object.keys(secrets)),
+    remote: remoteSecretNames,
+  })
 }
 
 async function inferRepoFromGit(): Promise<RepoCoordinates> {
@@ -155,7 +160,10 @@ function loadSecretsFromEnvFile(filePath: string): Record<string, string> {
 }
 
 async function fetchPublicKey(octokit: ReturnType<typeof getOctokit>, repo: RepoCoordinates) {
-  const response = await octokit.rest.actions.getRepoPublicKey({ owner: repo.owner, repo: repo.repo })
+  const response = await octokit.rest.actions.getRepoPublicKey({
+    owner: repo.owner,
+    repo: repo.repo,
+  })
   return response.data
 }
 

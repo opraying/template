@@ -23,6 +23,7 @@
     "sqlcipher": false
   },
   "dependencies": {
+    "@hot-updater/react-native": "*",
     "@babel/runtime": "*",
     "@craftzdog/react-native-buffer": "*",
     "@expo/ui": "*",
@@ -35,7 +36,7 @@
     "expo": "*",
     "expo-asset": "*",
     "expo-audio": "*",
-    "@xstack/expo-bip39": "*",
+    "@xstack/expo-bip39": "workspace:*",
     "expo-clipboard": "*",
     "expo-constants": "*",
     "expo-crypto": "*",
@@ -80,6 +81,7 @@
     "react-native-unistyles": "*",
     "react-native-worklets": "*",
     "readable-stream": "*",
-    "scheduler": "0.27.0"
-  }
+    "scheduler": "*"
+  },
+  "devDependencies": {}
 }

@@ -3,7 +3,7 @@ name: 🚀 Deploy Android
 on:
   workflow_run:
     workflows:
-      - "🤖 Android Build"
+      - '🤖 Android Build'
     types:
       - completed
 
@@ -73,7 +73,7 @@ jobs:
 
       - name: 🚀 Submit to Google Play
         if: steps.extract.outputs.found == 'true'
-        run: pnpm tsx scripts/run-ci-stage.ts --stage deploy-native-android
+        run: tsx scripts/run-ci-stage.ts --stage deploy-native-android
 
       - name: ℹ️ No artifacts to deploy
         if: steps.extract.outputs.found != 'true'

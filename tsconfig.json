@@ -1,8 +1,8 @@
 {
   "extends": "./tsconfig.base.json",
   "compilerOptions": {
-    "types": ["node"]
+    "types": ["node"],
   },
   "include": ["./scripts/**/*.ts", "./scripts/**/*.tsx", "./scratchpad/**/*.ts", "./scratchpad/**/*.tsx"],
-  "exclude": ["node_modules", "dist", "build", "infra", "packages", "apps", "template"]
+  "exclude": ["node_modules", "dist", "build", "infra", "packages", "apps", "template"],
 }

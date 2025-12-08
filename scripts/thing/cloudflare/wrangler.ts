@@ -209,6 +209,8 @@ export const getPlatformProxy = Effect.fn('wrangler.get-platform-proxy')(functio
 export const unstableDev = Effect.fn('wrangler.unstable-dev')(function* (script: string, options: Unstable_DevOptions) {
   const stop = Effect.fn('wrangler.stop-dev-worker')(function* (_: Unstable_DevWorker) {
     yield* Effect.promise(() => _.stop()).pipe(Effect.timeout(500), Effect.ignore)
+
+    yield* Effect.log('Dev Worker stopped 🛏️')
   })
 
   yield* Effect.acquireRelease(

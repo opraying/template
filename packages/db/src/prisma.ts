@@ -78,7 +78,6 @@ const DatabaseTypeMap: Record<string, Record<PrismaType, string>> = {
 
 export interface PrismaGenerateOptions {
   provider: 'sqlite' | 'mysql' | 'postgresql'
-  url: string
   format?: {
     modelCase?: CaseFormat // How to format model names
     fieldCase?: CaseFormat // How to format field names
@@ -132,7 +131,6 @@ const formatCase = {
 function normalizeOptions(options?: Partial<PrismaGenerateOptions>): PrismaGenerateOptions {
   const defaultOptions: PrismaGenerateOptions = {
     provider: 'postgresql',
-    url: "env('DATABASE_URL')",
     format: {
       modelCase: 'snake',
       fieldCase: 'snake',
@@ -158,7 +156,6 @@ function normalizeOptions(options?: Partial<PrismaGenerateOptions>): PrismaGener
 
   return {
     provider: options.provider ?? defaultOptions.provider,
-    url: options.url ?? defaultOptions.url,
     format: { ...defaultOptions.format, ...options.format },
     database: { ...defaultOptions.database, ...options.database },
     relations: { ...defaultOptions.relations, ...options.relations },
@@ -486,7 +483,11 @@ const generateFields = (key: string, table: Table, options: PrismaGenerateOption
         break
       }
       case 'Refinement': {
-        annotations = { ...field.annotations, ...field.type.annotations, ...field.type.from.annotations }
+        annotations = {
+          ...field.annotations,
+          ...field.type.annotations,
+          ...field.type.from.annotations,
+        }
         const ast = AST.annotations(field.type.from, annotations)
         columnType = getEffectiveType(ast)
         columnConfig.description = AST.getDescriptionAnnotation(ast).pipe(Option.getOrElse(() => ''))
@@ -883,7 +884,6 @@ export function generate(options: PrismaGenerateOptions, tables: Tables): string
 
 datasource db {
   provider = "${normalizedOptions.provider}"
-  url      = ${normalizedOptions.url}
 }
 
 ${generatorBlock}

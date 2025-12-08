@@ -15,7 +15,9 @@ export const workerHandles = (
       Effect.gen(function* () {
         const manager = yield* SchedulerManager
 
-        yield* Effect.forEach(plans, (plan) => manager.register(plan), { concurrency: 'unbounded' })
+        yield* Effect.forEach(plans, (plan) => manager.register(plan), {
+          concurrency: 'unbounded',
+        })
 
         yield* manager.run
       }).pipe(Effect.provideService(Scope.Scope, scope)) as Effect.Effect<void>,

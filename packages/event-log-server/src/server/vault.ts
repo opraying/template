@@ -312,7 +312,11 @@ export class Vault extends Effect.Service<Vault>()('Vault', {
               { concurrency: 2 },
             )
 
-            const syncInfo = yield* storage.getSyncInfo({ namespace, userId, publicKey: item.publicKey })
+            const syncInfo = yield* storage.getSyncInfo({
+              namespace,
+              userId,
+              publicKey: item.publicKey,
+            })
 
             return Option.some(
               SyncPublicKeyItem.make({

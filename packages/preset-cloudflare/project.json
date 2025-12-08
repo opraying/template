@@ -11,7 +11,7 @@
         "{workspaceRoot}/coverage/packages/preset-cloudflare"
       ],
       "options": {
-        "command": "pnpm xdev test --project pkgs-preset-cloudflare"
+        "command": "xdev test --project pkgs-preset-cloudflare"
       }
     },
     "madge": {

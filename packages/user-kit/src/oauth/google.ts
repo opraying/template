@@ -62,7 +62,11 @@ export class GoogleOAuthProvider extends Context.Tag('@userkit:oauth:google-prov
           Effect.flatMap(({ google, codeVerifier, state }) => {
             const url = Effect.try({
               try: () => google.createAuthorizationURL(state, codeVerifier, ['profile', 'email']),
-              catch: (error) => new OAuthInternalError({ message: 'OAuth get authorization url error', cause: error }),
+              catch: (error) =>
+                new OAuthInternalError({
+                  message: 'OAuth get authorization url error',
+                  cause: error,
+                }),
             }).pipe(Effect.map((url) => url.toString()))
 
             return Effect.all({
@@ -93,7 +97,11 @@ export class GoogleOAuthProvider extends Context.Tag('@userkit:oauth:google-prov
                   return Effect.tryPromise({
                     try: () => google.validateAuthorizationCode(code, codeVerifier),
                     catch: (error) =>
-                      new OAuthAppError({ message: 'OAuth callback error', cause: error, reason: 'invalid-code' }),
+                      new OAuthAppError({
+                        message: 'OAuth callback error',
+                        cause: error,
+                        reason: 'invalid-code',
+                      }),
                   })
                 },
               }),

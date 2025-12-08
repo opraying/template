@@ -77,7 +77,10 @@ export const OAuthHttpLayer = HttpApiBuilder.group(MyHttpApi, 'oauth', (handles)
     return handles
       .handleRaw('oauthLogin', ({ path, urlParams }) =>
         pipe(
-          OAuth.getAuthorizationUrl({ isPortal: urlParams.isPortal, redirectUri: urlParams.redirectUri }),
+          OAuth.getAuthorizationUrl({
+            isPortal: urlParams.isPortal,
+            redirectUri: urlParams.redirectUri,
+          }),
           Effect.map(({ url, state, codeVerifier }) => {
             const cookies = pipe(
               Array.empty(),

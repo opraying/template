@@ -220,7 +220,7 @@ async function main() {
       return
     }
 
-    exec("rg -t json --files --glob 'tsconfig*.json' | xargs ./node_modules/.bin/prettier --write 2>/dev/null")
+    exec('./node_modules/.bin/oxfmt')
 
     console.log('✅ All configuration files have been written successfully!')
   } catch (error) {

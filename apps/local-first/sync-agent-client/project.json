@@ -9,20 +9,20 @@
       "outputs": ["{workspaceRoot}/dist/apps/local-first/sync-agent-client"],
       "options": {
         "parallel": false,
-        "command": "pnpm xdev build --cwd apps/local-first/sync-agent-client"
+        "command": "xdev build --cwd apps/local-first/sync-agent-client"
       }
     },
     "app-deploy": {
       "executor": "nx:run-commands",
       "options": {
         "parallel": false,
-        "command": "pnpm xdev deploy --cwd apps/local-first/sync-agent-client"
+        "command": "xdev deploy --cwd apps/local-first/sync-agent-client"
       }
     },
     "serve": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "pnpm xdev serve --cwd apps/local-first/sync-agent-client"
+        "command": "xdev serve --cwd apps/local-first/sync-agent-client"
       }
     },
     "madge": {

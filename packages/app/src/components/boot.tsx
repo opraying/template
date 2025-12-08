@@ -35,11 +35,10 @@ export const Boot = <A, E, R>({
     //     </ErrorFullPageFallback>
     //   )}
     // >
-      <BootRun init={init} layer={layer} onLoaded={onLoaded}>
-        {children}
-      </BootRun>
-    // </ErrorBoundary>
-  )
+    <BootRun init={init} layer={layer} onLoaded={onLoaded}>
+      {children}
+    </BootRun>
+  ) // </ErrorBoundary>
 }
 
 const BootRun = <A, E, R>({

@@ -68,7 +68,10 @@ const make = Effect.gen(function* () {
       })
 
       const action: EmailVerificationAction = Option.isNone(user) ? 'create-user' : 'login'
-      const { code, token } = yield* emailVerificationCodeRepo.generate({ email: userEmail, action: action })
+      const { code, token } = yield* emailVerificationCodeRepo.generate({
+        email: userEmail,
+        action: action,
+      })
 
       yield* Effect.annotateCurrentSpan({ email })
       yield* Effect.annotateLogsScoped({

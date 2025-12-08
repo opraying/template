@@ -1,18 +1,14 @@
 import { Cause, Effect, Exit, pipe } from 'effect'
 import { Deployment } from '../deployment'
-import {
-  BuildWorkersParameters,
-  DatabaseMigrateDeploySubcommand,
-  EmailDeploySubcommand,
-  type BuildWorkersTarget,
-  type DeploySubcommand,
-} from '../domain'
+import { BuildWorkersParameters, type BuildWorkersTarget, type DeploySubcommand } from '../domain'
+import { DatabaseMigrateDeploySubcommand } from '../database/domain'
+import { EmailDeploySubcommand } from '../emails/domain'
 import { Git } from '../git'
 import { Github } from '../github'
 import { Notification } from '../notification'
 import { Workspace } from '../workspace'
 import * as Database from '../database/subcommand'
-import * as Email from '../email'
+import * as Email from '../emails/subcommand'
 
 export const start = Effect.fn('workers.deploy-start')(function* (
   subcommand: DeploySubcommand,
@@ -25,7 +21,9 @@ export const start = Effect.fn('workers.deploy-start')(function* (
   const git = yield* Git
   const github = yield* Github
 
-  const [branch, lastCommit] = yield* Effect.all([git.branch, git.lastCommit], { concurrency: 'unbounded' })
+  const [branch, lastCommit] = yield* Effect.all([git.branch, git.lastCommit], {
+    concurrency: 'unbounded',
+  })
 
   yield* Effect.annotateCurrentSpan({
     projectName: workspace.projectName,
@@ -54,7 +52,7 @@ export const start = Effect.fn('workers.deploy-start')(function* (
   const fail = (message: string) =>
     Effect.all(
       [
-        Effect.logDebug('Deploy failed'),
+        Effect.logInfo('Deploy failed'),
         notification.failed({
           projectName: workspace.projectName,
           branch,
@@ -148,7 +146,7 @@ export const start = Effect.fn('workers.deploy-start')(function* (
       return fail(Cause.pretty(cause))
     },
     onSuccess() {
-      return Effect.logDebug('Deploy successful')
+      return Effect.logInfo('Deploy successful')
     },
   })
 })

@@ -17,9 +17,7 @@
     "updates": {
       "fallbackToCacheTimeout": 0
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.opraying.template",
@@ -47,6 +45,12 @@
     },
     "plugins": [
       [
+        "@hot-updater/react-native",
+        {
+          "channel": "production"
+        }
+      ],
+      [
         "expo-build-properties",
         {
           "ios": {
@@ -66,12 +70,8 @@
           "launchMode": "most-recent"
         }
       ],
-      [
-        "expo-asset"
-      ],
-      [
-        "expo-router"
-      ],
+      ["expo-asset"],
+      ["expo-router"],
       [
         "expo-audio",
         {

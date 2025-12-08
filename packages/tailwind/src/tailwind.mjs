@@ -1,4 +1,5 @@
 import { join, resolve } from 'node:path'
+import { readdirSync, statSync } from 'node:fs'
 import { workspaceRoot } from '@nx/devkit'
 import defaultPreset from './tailwind-presets/default'
 
@@ -7,29 +8,27 @@ import defaultPreset from './tailwind-presets/default'
  * @param {import('tailwindcss').Config} options
  */
 function projectConfig(dir, options = {}) {
-  const project = resolve(workspaceRoot, dir, '../')
+  const currentProject = resolve(workspaceRoot, dir)
   const packagesDir = join(workspaceRoot, 'packages')
+  const parentDir = resolve(currentProject, '../')
 
   const pkgs = [
-    `${packagesDir}/lib/src`,
-    `${packagesDir}/errors/src`,
-    `${packagesDir}/form/src`,
-    `${packagesDir}/emails/src`,
-    `${packagesDir}/app/src`,
-    `${packagesDir}/app-kit/src`,
-    `${packagesDir}/user-kit/src`,
-    `${packagesDir}/local-first/src`,
-  ]
+    'lib/src',
+    'errors/src',
+    'form/src',
+    'emails/src',
+    'app/src',
+    'app-kit/src',
+    'user-kit/src',
+    'local-first/src',
+  ].map((item) => join(packagesDir, item))
 
-  const projectPkgs = [
-    `${project}/website`,
-    `${project}/studio`,
-    `${project}/web`,
-    `${project}/desktop`,
-    `${project}/client`,
-    `${project}/shared`,
-    `${project}/apps`,
-  ]
+  const projectPkgs = readdirSync(parentDir)
+    .filter((item) => {
+      const fullPath = join(parentDir, item)
+      return statSync(fullPath).isDirectory()
+    })
+    .map((item) => join(parentDir, item))
 
   const content = pkgs.concat(projectPkgs).map((item) => `${item}/**/*.tsx`)
 

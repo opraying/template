@@ -1,110 +1,19 @@
 import path from 'node:path'
-import type { StageContext, StageDefinition } from './types'
+import type { StageDefinition } from './types'
+import { workspaceRoot } from '@nx/devkit'
 import {
-  desktopDistRoot,
   discoverNativeArtifact,
-  ensureDirRelative,
   ensureEnvVars,
   fileExistsRelative,
-  getAndroidArtifactPath,
   getAndroidProfile,
   getAndroidSubmitProfile,
-  getAffectedNativeProjects,
-  getIosArtifactPath,
   getIosProfile,
   getIosSubmitProfile,
+  getNativeProjectsFromContext,
   listFilesRecursive,
-  nativeDistRoot,
-  repoRoot,
+  resolveNativeProjects,
+  storeNativeProjects,
 } from './utils'
-
-const getNativeBuildEnv = () => {
-  const hermesDir =
-    process.env.REACT_NATIVE_OVERRIDE_HERMES_DIR ?? path.resolve(repoRoot, 'node_modules', 'hermes-compiler', 'hermesc')
-  const easLocalPlugin =
-    process.env.EAS_LOCAL_BUILD_PLUGIN_PATH ??
-    path.resolve(repoRoot, 'node_modules', 'eas-cli-local-build-plugin', 'bin', 'run')
-  const fixedWorkdir = process.env.EXPO_FIXED_BUILD_WORKDIR ?? repoRoot
-
-  return {
-    CI: process.env.CI ?? 'true',
-    EXPO_DEBUG: process.env.EXPO_DEBUG ?? 'true',
-    EXPO_NO_TELEMETRY: process.env.EXPO_NO_TELEMETRY ?? 'true',
-    EXPO_UNSTABLE_METRO_OPTIMIZE_GRAPH: process.env.EXPO_UNSTABLE_METRO_OPTIMIZE_GRAPH ?? 'true',
-    EXPO_ATLAS: process.env.EXPO_ATLAS ?? 'true',
-    EXPO_FIXED_BUILD_WORKDIR: fixedWorkdir,
-    REACT_NATIVE_OVERRIDE_HERMES_DIR: hermesDir,
-    EAS_BUILD_DISABLE_EXPO_DOCTOR_STEP: process.env.EAS_BUILD_DISABLE_EXPO_DOCTOR_STEP ?? 'true',
-    EAS_LOCAL_BUILD_PLUGIN_PATH: easLocalPlugin,
-    EAS_NO_VCS_CHECK: process.env.EAS_NO_VCS_CHECK ?? '1',
-  }
-}
-
-const getCiSharedContext = (context: StageContext) => context.ci
-
-const parseProjectOverride = (value: string | undefined) =>
-  (value ?? '')
-    .split(/[, ]+/)
-    .map((entry) => entry.trim())
-    .filter((entry) => entry.length > 0)
-
-const getNativeProjectsFromContext = (context: StageContext): string[] => {
-  const value = context['nativeProjects']
-  return Array.isArray(value) ? (value as string[]) : []
-}
-
-const storeNativeProjects = (context: StageContext, projects: string[]) => {
-  context['nativeProjects'] = projects
-}
-
-const resolveNativeProjects = (context: StageContext, label: string) => {
-  const override = parseProjectOverride(process.env.NX_NATIVE_PROJECTS)
-  if (override.length > 0) {
-    console.log(`[${label}] Using NX_NATIVE_PROJECTS override: ${override.join(', ')}`)
-    return override
-  }
-  const ci = getCiSharedContext(context)
-  if (ci) {
-    const native = ci.affectedProjects.filter((project) => {
-      const tags = ci.projectMeta?.[project]?.tags ?? []
-      return tags.includes('ci:surface:native')
-    })
-    if (native.length === 0) {
-      console.log(`[${label}] No affected native projects detected from surface analysis.`)
-    } else {
-      console.log(`[${label}] Native projects from surface analysis: ${native.join(', ')}`)
-    }
-    return native
-  }
-  const projects = getAffectedNativeProjects()
-  if (projects.length === 0) {
-    console.log(`[${label}] No affected native projects detected via Nx.`)
-  } else {
-    console.log(`[${label}] Native projects via Nx detection: ${projects.join(', ')}`)
-  }
-  return projects
-}
-
-const createRunManyArgs = (projects: string[], platform: 'android' | 'ios', profile: string): string[] => {
-  if (projects.length === 0) {
-    return ['exec', 'node', '-e', `console.log("No affected native projects for ${platform} build. Skipping.")`]
-  }
-  return [
-    'exec',
-    'nx',
-    'run-many',
-    '--target=rn:build',
-    `--projects=${projects.join(',')}`,
-    '--parallel=1',
-    '--',
-    '--platform',
-    platform,
-    '--profile',
-    profile,
-    '--local',
-    '--interactive=false',
-  ]
-}
 
 export const STAGES: Record<string, StageDefinition> = {
   lint: {
@@ -138,18 +47,13 @@ export const STAGES: Record<string, StageDefinition> = {
   web: {
     description: 'Build Nx libs/apps that target web, SSR, and workers',
     surface: {
-      selectors: [{ tagsAny: ['ci:surface:web'] }],
+      selectors: [{ tagsAny: ['web'] }],
     },
     steps: [
       {
-        name: 'Build libraries',
+        name: 'Build',
         command: 'pnpm',
         args: ['nx', 'affected', '--target=build', '--parallel=4'],
-      },
-      {
-        name: 'Build apps (app-build target)',
-        command: 'pnpm',
-        args: ['nx', 'affected', '--target=app-build', '--parallel=2'],
       },
     ],
   },
@@ -157,123 +61,159 @@ export const STAGES: Record<string, StageDefinition> = {
     description: 'Deploy web/worker apps',
     steps: [
       {
-        name: 'Deploy libraries',
-        command: 'pnpm',
-        args: ['nx', 'affected', '--target=deploy', '--parallel=1'],
-      },
-      {
         name: 'Deploy apps',
         command: 'pnpm',
-        args: ['nx', 'affected', '--target=app-deploy', '--parallel=1'],
+        args: ['nx', 'affected', '--target=deploy', '--parallel=4'],
       },
     ],
   },
   'native-android': {
     description: 'Typecheck RN project and build Android artifacts via Nx/EAS',
     surface: {
-      selectors: [{ tagsAny: ['ci:surface:native'] }],
+      selectors: [{ tagsAny: ['native'] }],
     },
-    requiredEnv: ['EXPO_TOKEN'],
+    requiredEnv: [],
     prepare: (context) => {
-      ensureDirRelative(nativeDistRoot)
       const projects = resolveNativeProjects(context, 'android')
       storeNativeProjects(context, projects)
     },
     steps: [
       {
-        name: 'Nx Android builds',
+        name: 'Android builds',
         command: 'pnpm',
-        args: (context) => createRunManyArgs(getNativeProjectsFromContext(context), 'android', getAndroidProfile()),
-        env: () => getNativeBuildEnv(),
+        args: (context) => {
+          const projects = getNativeProjectsFromContext(context)
+          return [
+            'nx',
+            'run-many',
+            `--target=build:android`,
+            `--projects=${projects.join(',')}`,
+            '--parallel=1',
+            '--profile',
+            getAndroidProfile(),
+          ]
+        },
       },
     ],
   },
   'deploy-native-android': {
     description: 'Submit Android artifacts to Google Play via EAS submit',
-    requiredEnv: ['EXPO_TOKEN'],
+    requiredEnv: [],
     prepare: (context) => {
+      const projects = resolveNativeProjects(context, 'android')
+      storeNativeProjects(context, projects)
       const overridePath = process.env.ANDROID_ARTIFACT_PATH
-      const discovered =
+      const artifactPath =
         overridePath && overridePath.length > 0 ? overridePath : discoverNativeArtifact('android', ['aab', 'apk'])
-      const artifactPath = discovered ?? getAndroidArtifactPath()
-      if (!fileExistsRelative(artifactPath)) {
+      if (!artifactPath || !fileExistsRelative(artifactPath)) {
         throw new Error(`Android artifact not found at ${artifactPath}. Ensure artifacts are extracted to dist/native.`)
       }
       context.androidArtifactPath = artifactPath
     },
     steps: [
       {
-        name: 'EAS Android submit',
+        name: 'Android submit',
         command: 'pnpm',
-        args: (context) => [
-          'exec',
-          'eas',
-          'submit',
-          '--platform',
-          'android',
-          '--path',
-          String(context.androidArtifactPath),
-          '--profile',
-          getAndroidSubmitProfile(),
-          '--non-interactive',
-        ],
-        env: {
-          EAS_NO_VCS_CHECK: '1',
+        args: (context) => {
+          const projects = getNativeProjectsFromContext(context)
+          return [
+            'nx',
+            'run-many',
+            `--target=deploy:android`,
+            `--projects=${projects.join(',')}`,
+            '--parallel=1',
+            '--profile',
+            getAndroidSubmitProfile(),
+          ]
         },
       },
     ],
   },
   'native-ios': {
-    description: 'Typecheck RN project and build iOS artifacts via Nx/EAS',
+    description: 'Build iOS artifacts via Nx',
     surface: {
-      selectors: [{ tagsAny: ['ci:surface:native'] }],
+      selectors: [{ tagsAny: ['native'] }],
     },
-    requiredEnv: ['EXPO_TOKEN'],
+    requiredEnv: [],
     supportedPlatforms: ['macos'],
     prepare: (context) => {
-      ensureDirRelative(nativeDistRoot)
       const projects = resolveNativeProjects(context, 'ios')
       storeNativeProjects(context, projects)
     },
     steps: [
       {
-        name: 'Nx iOS builds',
+        name: 'iOS builds',
         command: 'pnpm',
-        args: (context) => createRunManyArgs(getNativeProjectsFromContext(context), 'ios', getIosProfile()),
-        env: () => getNativeBuildEnv(),
+        args: (context) => {
+          const projects = getNativeProjectsFromContext(context)
+          return [
+            'nx',
+            'run-many',
+            `--target=build:ios`,
+            `--projects=${projects.join(',')}`,
+            '--parallel=1',
+            '--profile',
+            getIosProfile(),
+          ]
+        },
       },
     ],
   },
   'deploy-native-ios': {
-    description: 'Submit iOS artifacts to App Store via EAS submit',
-    requiredEnv: ['EXPO_TOKEN'],
+    description: 'Deploy iOS artifacts to App Store',
+    requiredEnv: [],
     prepare: (context) => {
+      const projects = resolveNativeProjects(context, 'ios')
+      storeNativeProjects(context, projects)
       const overridePath = process.env.IOS_ARTIFACT_PATH
-      const discovered = overridePath && overridePath.length > 0 ? overridePath : discoverNativeArtifact('ios', ['ipa'])
-      const artifactPath = discovered ?? getIosArtifactPath()
-      if (!fileExistsRelative(artifactPath)) {
+      const artifactPath =
+        overridePath && overridePath.length > 0 ? overridePath : discoverNativeArtifact('ios', ['ipa'])
+      if (!artifactPath || !fileExistsRelative(artifactPath)) {
         throw new Error(`iOS artifact not found at ${artifactPath}. Ensure artifacts are extracted to dist/native.`)
       }
       context.iosArtifactPath = artifactPath
     },
     steps: [
       {
-        name: 'EAS iOS submit',
+        name: 'iOS submit',
         command: 'pnpm',
-        args: (context) => [
-          'exec',
-          'eas',
-          'submit',
-          '--platform',
-          'ios',
-          '--path',
-          String(context.iosArtifactPath),
-          '--profile',
-          getIosSubmitProfile(),
-          '--non-interactive',
-        ],
-        env: {
-          EAS_NO_VCS_CHECK: '1',
+        args: (context) => {
+          const projects = getNativeProjectsFromContext(context)
+          return [
+            'nx',
+            'run-many',
+            `--target=deploy:ios`,
+            `--projects=${projects.join(',')}`,
+            '--parallel=1',
+            '--profile',
+            getIosSubmitProfile(),
+          ]
+        },
+      },
+    ],
+  },
+  'js-update': {
+    description: 'Bundle and publish JS updates via hot-updater CLI',
+    steps: [
+      {
+        name: 'Publish JS update',
+        command: 'pnpm',
+        args: () => {
+          const env = process.env.JS_UPDATE_ENV ?? process.env.UPDATE_ENV ?? 'staging'
+          const branchOverride = process.env.VERSION_BRANCH ?? ''
+          const args = ['tsx', 'scripts/ci/js-update.ts', '--env', env]
+          if (branchOverride) {
+            args.push('--branch', branchOverride)
+          }
+          const platform = process.env.JS_UPDATE_PLATFORM
+          if (platform) {
+            args.push('--platform', platform)
+          }
+          const channelOverride = process.env.JS_UPDATE_CHANNEL
+          if (channelOverride) {
+            args.push('--channel', channelOverride)
+          }
+          return args
         },
       },
     ],
@@ -281,7 +221,7 @@ export const STAGES: Record<string, StageDefinition> = {
   desktop: {
     description: 'Electron / desktop builds (placeholder until desktop project lands)',
     surface: {
-      selectors: [{ tagsAny: ['ci:surface:desktop'] }],
+      selectors: [{ tagsAny: ['desktop'] }],
     },
     steps: [],
   },
@@ -320,7 +260,7 @@ export const STAGES: Record<string, StageDefinition> = {
         command: 'bash',
         args: () => ['-c', 'set -euo pipefail\nls -al "$DESKTOP_ARTIFACT_DIR"\nfind "$DESKTOP_ARTIFACT_DIR" -type f'],
         env: (context) => ({
-          DESKTOP_ARTIFACT_DIR: path.resolve(repoRoot, String(context.desktopArtifactDir)),
+          DESKTOP_ARTIFACT_DIR: path.resolve(workspaceRoot, String(context.desktopArtifactDir)),
         }),
       },
       {
@@ -344,7 +284,7 @@ export const STAGES: Record<string, StageDefinition> = {
         ],
         env: (context) => ({
           DESKTOP_DEPLOY_TARGET: String(context.desktopTarget),
-          DESKTOP_ARTIFACT_DIR: path.resolve(repoRoot, String(context.desktopArtifactDir)),
+          DESKTOP_ARTIFACT_DIR: path.resolve(workspaceRoot, String(context.desktopArtifactDir)),
           DESKTOP_R2_PREFIX: process.env.DESKTOP_R2_PREFIX ?? '',
           CLOUDFLARE_R2_BUCKET: process.env.CLOUDFLARE_R2_BUCKET ?? '',
           CLOUDFLARE_ACCOUNT_ID: process.env.CLOUDFLARE_ACCOUNT_ID ?? '',
@@ -385,7 +325,7 @@ export const STAGES: Record<string, StageDefinition> = {
         ],
         env: (context) => ({
           DESKTOP_DEPLOY_TARGET: String(context.desktopTarget),
-          DESKTOP_ARTIFACT_DIR: path.resolve(repoRoot, String(context.desktopArtifactDir)),
+          DESKTOP_ARTIFACT_DIR: path.resolve(workspaceRoot, String(context.desktopArtifactDir)),
           DESKTOP_RELEASE_TAG: process.env.DESKTOP_RELEASE_TAG ?? '',
           DESKTOP_RELEASE_NAME: process.env.DESKTOP_RELEASE_NAME ?? '',
           DESKTOP_RELEASE_BODY: process.env.DESKTOP_RELEASE_BODY ?? '',

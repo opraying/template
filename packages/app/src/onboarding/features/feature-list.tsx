@@ -183,7 +183,9 @@ export const FeatureList = ({ features }: FeatureListProps) => {
                                 'rounded-lg bg-muted/30 overflow-hidden',
                                 expandedCharts[`${index}-${detailIndex}`] ? 'h-48' : 'h-24',
                               )}
-                              animate={{ height: expandedCharts[`${index}-${detailIndex}`] ? 192 : 96 }}
+                              animate={{
+                                height: expandedCharts[`${index}-${detailIndex}`] ? 192 : 96,
+                              }}
                             >
                               <div className="h-full flex items-end justify-between gap-1 p-2">
                                 {detail.chart.data.map((value, i) => (

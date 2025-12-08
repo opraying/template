@@ -2,8 +2,8 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "types": ["vite/client"],
-    "outDir": "../../dist/out-tsc"
+    "outDir": "../../dist/out-tsc",
   },
   "include": ["**/*.d.ts", "vite.config.ts", "e2e/**/*.ts", "e2e/**/*.tsx", "tests/**/*.ts", "tests/**/*.tsx"],
-  "exclude": ["node_modules", "dist", "build"]
+  "exclude": ["node_modules", "dist", "build"],
 }

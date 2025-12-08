@@ -89,26 +89,8 @@
           "args": "--all"
         }
       }
-    },
-    "e2e": {
-      "inputs": ["default", "^production"],
-      "cache": true
     }
   },
-  "plugins": [
-    {
-      "plugin": "@nx/expo/plugin",
-      "options": {
-        "startTargetName": "start",
-        "runIosTargetName": "rn:ios",
-        "runAndroidTargetName": "rn:android",
-        "prebuildTargetName": "rn:prebuild",
-        "installTargetName": "rn:install",
-        "buildTargetName": "rn:build",
-        "submitTargetName": "rn:submit"
-      }
-    }
-  ],
   "parallel": 6,
   "nxCloudAccessToken": "YjM0NGViNDAtNWRlZS00YjY0LWIzNTQtNTk5ZmU4ZTI3OGNjfHJlYWQtd3JpdGU="
 }

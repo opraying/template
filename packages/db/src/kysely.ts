@@ -35,7 +35,7 @@ type Selectable<A, I> = {
       encodeSchema: Schema.Schema<NA, NI>,
       statement: (data: NI) => Effect.Effect<ReadonlyArray<I>, E, R>,
       input: NA,
-    ): SelectableEffect<ReadonlyArray<A>, E | ParseError | SqlError, R>
+    ): SelectableEffect<ReadonlyArray<A>, E | ParseError | SqlError, R>;
 
     <NA, NI, E, R = never>(
       encodeSchema: Schema.Schema<NA, NI>,
@@ -49,7 +49,7 @@ type Selectable<A, I> = {
       decodeSchema: Schema.Schema<DA, DI>,
       statement: (data: NI) => Effect.Effect<ReadonlyArray<DI>, E, R>,
       input: NI,
-    ): SelectableEffect<ReadonlyArray<DA>, E | ParseError | SqlError, R>
+    ): SelectableEffect<ReadonlyArray<DA>, E | ParseError | SqlError, R>;
 
     <NA, NI, DA, DI, E, R = never>(
       encodeSchema: Schema.Schema<NA, NI>,
@@ -80,7 +80,7 @@ type Insertable<A, I, IA, II> = {
   <const X extends InsertData<IA>, E, R = never>(
     statement: (data: Array<II>) => Effect.Effect<ReadonlyArray<I>, E, R>,
     input: X,
-  ): InsertableEffect<X extends Array<any> ? ReadonlyArray<A> : A, E | ParseError | SqlError, R>
+  ): InsertableEffect<X extends Array<any> ? ReadonlyArray<A> : A, E | ParseError | SqlError, R>;
 
   <E, R = never>(
     statement: (data: Array<II>) => Effect.Effect<ReadonlyArray<I>, E, R>,
@@ -92,7 +92,7 @@ type Insertable<A, I, IA, II> = {
     <const X extends InsertData<IA>, E, X1 = any, R = never>(
       statement: (data: Array<II>) => Effect.Effect<X1, E, R>,
       input: X,
-    ): Effect.Effect<void, E | ParseError | SqlError, R>
+    ): Effect.Effect<void, E | ParseError | SqlError, R>;
 
     <E, X1 = any, R = never>(
       statement: (data: Array<II>) => Effect.Effect<X1, E, R>,
@@ -104,7 +104,7 @@ type Insertable<A, I, IA, II> = {
       decode: Schema.Schema<DA, DI>,
       statement: (data: Array<II>) => Effect.Effect<ReadonlyArray<DI>, E, R>,
       input: X,
-    ): InsertableEffect<X extends Array<any> ? ReadonlyArray<DA> : DA, E | ParseError | SqlError, R>
+    ): InsertableEffect<X extends Array<any> ? ReadonlyArray<DA> : DA, E | ParseError | SqlError, R>;
 
     <DA, DI, E, R = never>(
       decode: Schema.Schema<DA, DI>,
@@ -139,7 +139,7 @@ type Updateable<A, I, UA, UI> = {
   <E, R = never>(
     statement: (data: UI) => Effect.Effect<ReadonlyArray<I>, E, R>,
     input: UA,
-  ): UpdateableEffect<A, E | ParseError | SqlError, R>
+  ): UpdateableEffect<A, E | ParseError | SqlError, R>;
 
   <E, R = never>(
     statement: (data: UI) => Effect.Effect<ReadonlyArray<I>, E, R>,
@@ -149,7 +149,7 @@ type Updateable<A, I, UA, UI> = {
     <E, X1 = any, R = never>(
       statement: (data: UI) => Effect.Effect<X1, E, R>,
       input: UA,
-    ): Effect.Effect<void, E | ParseError | SqlError, R>
+    ): Effect.Effect<void, E | ParseError | SqlError, R>;
 
     <E, X1 = any, R = never>(
       statement: (input: UI) => Effect.Effect<X1, E, R>,
@@ -161,7 +161,7 @@ type Updateable<A, I, UA, UI> = {
       encodeSchema: Schema.Schema<NA, NI>,
       statement: (data: NI) => Effect.Effect<ReadonlyArray<I>, E, R>,
       input: NA,
-    ): UpdateableEffect<A, E | ParseError | SqlError, R>
+    ): UpdateableEffect<A, E | ParseError | SqlError, R>;
 
     <NA, NI, E, R = never>(
       encodeSchema: Schema.Schema<NA, NI>,
@@ -173,7 +173,7 @@ type Updateable<A, I, UA, UI> = {
         encodeSchema: Schema.Schema<NA, NI>,
         statement: <X = any>(data: NI) => Effect.Effect<X, E, R>,
         input: NA,
-      ): Effect.Effect<void, E | ParseError | SqlError, R>
+      ): Effect.Effect<void, E | ParseError | SqlError, R>;
 
       <NA, NI, E, R = never>(
         encodeSchema: Schema.Schema<NA, NI>,
@@ -187,7 +187,7 @@ type Updateable<A, I, UA, UI> = {
       decode: Schema.Schema<DA, DI>,
       statement: (data: UI) => Effect.Effect<ReadonlyArray<DI>, E, R>,
       input: UA,
-    ): UpdateableEffect<DA, E | ParseError | SqlError, R>
+    ): UpdateableEffect<DA, E | ParseError | SqlError, R>;
 
     <DA, DI, E, R = never>(
       decode: Schema.Schema<DA, DI>,
@@ -542,7 +542,7 @@ export const encode: {
     schema: Schema.Schema<A, I>,
     statement: (input: I) => Effect.Effect<X, E, R>,
     input: A,
-  ): Effect.Effect<X, E | SqlError | ParseError, R>
+  ): Effect.Effect<X, E | SqlError | ParseError, R>;
   <A, I, X, E, R = never>(
     schema: Schema.Schema<A, I>,
     statement: (input: I) => Effect.Effect<X, E, R>,
@@ -566,7 +566,7 @@ export const decode: {
   <A, I, E, R = never>(
     schema: Schema.Schema<A, I>,
     statement: Effect.Effect<I, E>,
-  ): Effect.Effect<CastArray<A>, E | ParseError | SqlError, R>
+  ): Effect.Effect<CastArray<A>, E | ParseError | SqlError, R>;
   <A, I>(
     schema: Schema.Schema<A, I>,
   ): <E, R = never>(statement: Effect.Effect<I, E>) => Effect.Effect<CastArray<A>, E | ParseError | SqlError, R>
@@ -585,7 +585,7 @@ export const codec: {
     decode: Schema.Schema<DA, DI, never>,
     statement: (input: I) => Effect.Effect<DI, E, R>,
     input: A,
-  ): Effect.Effect<DA, E | ParseError | SqlError, R>
+  ): Effect.Effect<DA, E | ParseError | SqlError, R>;
   <A, I, DA, DI, E, R = never>(
     encode: Schema.Schema<A, I, never>,
     decode: Schema.Schema<DA, DI, never>,

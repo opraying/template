@@ -196,7 +196,7 @@ export const duplexSchema: {
     OutDone,
     InDone,
     IR | OR | R
-  >
+  >;
   <R, InErr, OutErr, OutDone, InDone, IA, II, IR, OA, OI, OR>(
     self: Channel.Channel<
       Chunk.Chunk<Uint8Array>,

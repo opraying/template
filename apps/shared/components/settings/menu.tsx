@@ -1,25 +1,39 @@
 import { buildModules, type SettingMenuConfig } from '@xstack/app-kit/settings'
 
 const ProfileSettings = () =>
-  import('@shared/components/settings/module/profile').then((m) => ({ default: m.ProfileSettings }))
+  import('@shared/components/settings/module/profile').then((m) => ({
+    default: m.ProfileSettings,
+  }))
 
 const PreferenceSettings = () =>
-  import('@shared/components/settings/module/preference').then((m) => ({ default: m.PreferenceSettings }))
+  import('@shared/components/settings/module/preference').then((m) => ({
+    default: m.PreferenceSettings,
+  }))
 
 const SyncSettings = () =>
-  import('@xstack/app-kit/settings/module/sync-settings').then((m) => ({ default: m.SyncSettings }))
+  import('@xstack/app-kit/settings/module/sync-settings').then((m) => ({
+    default: m.SyncSettings,
+  }))
 
 const SubscriptionSettings = () =>
-  import('@xstack/app-kit/settings/module/subscription').then((m) => ({ default: m.SubscriptionSettings }))
+  import('@xstack/app-kit/settings/module/subscription').then((m) => ({
+    default: m.SubscriptionSettings,
+  }))
 
 const ShortcutsSettings = () =>
-  import('@shared/components/settings/module/keyboard-shorts').then((m) => ({ default: m.KeyboardShortsSettings }))
+  import('@shared/components/settings/module/keyboard-shorts').then((m) => ({
+    default: m.KeyboardShortsSettings,
+  }))
 
 const DownloadApps = () =>
-  import('@shared/components/settings/module/download-apps').then((m) => ({ default: m.DownloadApp }))
+  import('@shared/components/settings/module/download-apps').then((m) => ({
+    default: m.DownloadApp,
+  }))
 
 const Changelog = () =>
-  import('@shared/components/settings/module/changelog').then((m) => ({ default: m.ChangelogList }))
+  import('@shared/components/settings/module/changelog').then((m) => ({
+    default: m.ChangelogList,
+  }))
 
 const SendFeedback = () => import('@shared/components/settings/module/feedback').then((m) => ({ default: m.Feedback }))
 

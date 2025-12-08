@@ -2,5 +2,9 @@
   "name": "@xstack/scripts-thing",
   "types": "module",
   "version": "0.0.0",
-  "sideEffects": true
+  "sideEffects": true,
+  "bin": "bin.ts",
+  "scripts": {
+    "postinstall": "ln -sf $(pwd)/bin.ts ../../node_modules/.bin/xdev"
+  }
 }

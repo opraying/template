@@ -210,7 +210,7 @@ const make = Effect.gen(function* () {
       Effect.orDie,
     )
 
-    return yield* Effect.logDebug('Workers build finished').pipe(
+    return yield* Effect.logInfo('Workers build finished').pipe(
       Effect.annotateLogs('workers bundle size', formatSize(outfileSize)),
     )
   }).pipe(Effect.withSpan('build.cloudflare-build'))

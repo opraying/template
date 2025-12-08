@@ -38,7 +38,7 @@ jobs:
 
       - name: 🔍 Detect impacted web surface
         id: detect
-        run: pnpm tsx scripts/detect-ci-surfaces.ts --surface web --format github
+        run: tsx scripts/detect-ci-surfaces.ts --surface web --format github
 
       - name: 💤 Skip web build
         if: steps.detect.outputs.surface-web != 'true'
@@ -46,7 +46,7 @@ jobs:
 
       - name: 🏗️ Run web build stage
         if: steps.detect.outputs.surface-web == 'true'
-        run: pnpm tsx scripts/run-ci-stage.ts --stage web
+        run: tsx scripts/run-ci-stage.ts --stage web
 
       - name: 📦 Package dist
         if: steps.detect.outputs.surface-web == 'true'

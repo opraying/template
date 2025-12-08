@@ -222,13 +222,15 @@ export const effect = <E = never, R = never>(
             }
           }, Effect.provide(ctx)),
           databaseSize: Effect.fnUntraced(function* () {
-            const databaseSize = yield* fn
-              .databaseSize()
-              .pipe(
-                Effect.catchAllDefect(
-                  (e) => new SqlError.SqlError({ message: 'Proxy sqlite get database size failure', cause: e }),
-                ),
-              )
+            const databaseSize = yield* fn.databaseSize().pipe(
+              Effect.catchAllDefect(
+                (e) =>
+                  new SqlError.SqlError({
+                    message: 'Proxy sqlite get database size failure',
+                    cause: e,
+                  }),
+              ),
+            )
 
             return databaseSize
           }, Effect.provide(ctx)),

@@ -293,7 +293,10 @@ export const makeWorker = (options: {
         const upgradeHeader = headers.get('Upgrade')
 
         if (!upgradeHeader || upgradeHeader !== 'websocket') {
-          return new Response(null, { status: 426, statusText: 'Durable Object expected Upgrade: websocket' })
+          return new Response(null, {
+            status: 426,
+            statusText: 'Durable Object expected Upgrade: websocket',
+          })
         }
 
         const identityEither = DurableObjectUtils.DurableObjectIdentitySchema.fromHeaders(headers)

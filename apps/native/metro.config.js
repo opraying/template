@@ -196,7 +196,9 @@ const make = (dirname) => {
 
           const modules = context.extraNodeModules || {}
           if (modules['react-native']) {
-            modules['react-native'] = require.resolve('react-native-macos', { paths: nodeModulesPaths })
+            modules['react-native'] = require.resolve('react-native-macos', {
+              paths: nodeModulesPaths,
+            })
             modules['react-native-macos'] = modules['react-native']
           }
 

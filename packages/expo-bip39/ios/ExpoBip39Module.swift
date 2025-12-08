@@ -15,17 +15,17 @@ public class ExpoBip39Module: Module {
       return try self.deriveSeed(mnemonic: mnemonic, password: password)
     }
   }
-  
+
   private func deriveSeed(mnemonic: String, password: String) throws -> [String] {
     let salt = "mnemonic" + password
     guard let passData = mnemonic.data(using: .utf8),
           let saltData = salt.data(using: .utf8) else {
       throw Exception(name: "ENCODING_ERROR", description: "Invalid input encoding")
     }
-    
-    // 准备输出缓冲区
+
+    // 准备输出缓冲区 111
     var derivedKey = [UInt8](repeating: 0, count: 64)
-    
+
     // 调用 CommonCrypto PBKDF2-HMAC-SHA512
     let status = passData.withUnsafeBytes { passBytes in
       saltData.withUnsafeBytes { saltBytes in
@@ -39,11 +39,11 @@ public class ExpoBip39Module: Module {
         )
       }
     }
-    
+
     guard status == kCCSuccess else {
       throw Exception(name: "PBKDF2_ERROR", description: "Key derivation failed")
     }
-    
+
     // 转换为字符串数组
     return derivedKey.map { String($0) }
   }

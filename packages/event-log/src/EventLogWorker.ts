@@ -13,7 +13,12 @@ export const EventLogWorker = Layer.effect(
     return EventLog.EventLog.of({
       write: (options) =>
         workerPool
-          .executeEffect(new EventLogSchema.EventLogWriteRequest({ event: options.event, payload: options.payload }))
+          .executeEffect(
+            new EventLogSchema.EventLogWriteRequest({
+              event: options.event,
+              payload: options.payload,
+            }),
+          )
           .pipe(Effect.orDie),
 
       destroy: Effect.void,

@@ -4,7 +4,7 @@ import { workspaceRoot } from '@nx/devkit'
 function projectConfig(dir) {
   const projectPath = join(workspaceRoot, dir)
 
-  return {
+  const config = {
     plugins: {
       'postcss-flexbugs-fixes': {},
       'postcss-preset-env': {
@@ -21,6 +21,8 @@ function projectConfig(dir) {
       },
     },
   }
+
+  return config
 }
 
 export { projectConfig }

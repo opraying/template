@@ -62,7 +62,7 @@ export interface QueueEvent {
   process: {
     <A = unknown, E = any>(
       effect: (message: QueueEventMessage<A>) => Effect.Effect<void, E, never>,
-    ): Effect.Effect<QueueEventMessage<A>[], never>
+    ): Effect.Effect<QueueEventMessage<A>[], never>;
     <A = unknown, I = unknown, E = any>(
       schema: Schema.Schema<A, I>,
       effect: (message: QueueEventMessage<A>) => Effect.Effect<void, E, never>,

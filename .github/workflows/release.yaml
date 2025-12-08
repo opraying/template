@@ -78,25 +78,25 @@ jobs:
         run: pnpm lint
 
       - name: ♻️ Run Circular Dependency Check
-        run: pnpm nx affected --target=madge
+        run: nx affected --target=madge
 
       - name: 🔍 Run Typecheck
-        run: pnpm nx affected --target=typecheck
+        run: nx affected --target=typecheck
 
       - name: 🔍 Run Unit Tests
         run: echo 'TODO unit tests'
 
       - name: 🏗️ Build Web Libraries
         if: steps.detect-affected.outputs.affected-web == 'true'
-        run: pnpm nx affected --target=build --parallel=1
+        run: nx affected --target=build --parallel=1
 
       - name: ⚡ Build Web Apps
         if: steps.detect-affected.outputs.affected-web == 'true'
-        run: pnpm nx affected --target=app-build --parallel=1
+        run: nx affected --target=app-build --parallel=1
 
       - name: 🔍 Run Web apps E2E Tests
         if: steps.detect-affected.outputs.affected-web == 'true'
-        run: pnpm nx affected --target=e2e --parallel=1
+        run: nx affected --target=e2e --parallel=1
 
       - name: 📦 Zip Web Artifacts
         run: |
@@ -149,14 +149,14 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        run: pnpm nx affected --target=deploy --parallel=1
+        run: nx affected --target=deploy --parallel=1
 
       - name: 🚀 Deploy Web App
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        run: pnpm nx affected --target=app-deploy --parallel=1
+        run: nx affected --target=app-deploy --parallel=1
 
   build-native:
     name: Build Native Apps
@@ -184,12 +184,12 @@ jobs:
         uses: ./.github/actions/setup
 
       - name: 🏗️ Build Native Libraries
-        run: pnpm nx affected --target=build --parallel=1
+        run: nx affected --target=build --parallel=1
 
       - name: ⚡ Build Native Apps
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: pnpm nx affected --target=native-build --parallel=1
+        run: nx affected --target=native-build --parallel=1
 
       - name: 🔍 Run Native apps E2E Tests
         run: echo 'TODO native apps e2e tests'
