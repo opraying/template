@@ -1,9 +1,6 @@
 import { FileSystem, Path } from '@effect/platform'
 import type { SqlError } from '@effect/sql'
 import * as SqlD1 from '@effect/sql-d1/D1Client'
-import { formatSchema, loadSchemaContext } from '@prisma/internals'
-import type { EngineArgs } from '@prisma/migrate'
-import { SchemaEngineCLI } from '@prisma/migrate'
 import { Effect, Exit, Layer, pipe, Schedule, Scope, String } from 'effect'
 import { tsImport } from 'tsx/esm/api'
 import type { Unstable_Config } from 'wrangler'
@@ -25,6 +22,7 @@ import { shell, shellInPath } from '../utils/shell'
 import type * as Workspace from '../workspace'
 import { CaptureStdout } from '../utils/capture-stdout'
 import { formatMigrationName } from './utils'
+import * as PrismaMigrate from './prisma'
 
 type DatabaseConfig =
   | {
@@ -166,7 +164,10 @@ const detectDatabase = Effect.fn('db.detect-database')(function* (
   const tablesPath = path.join(dbDir, 'tables.ts')
 
   const { tables, config } = yield* Effect.promise(() =>
-    tsImport(tablesPath, { parentURL: import.meta.url, tsconfig: tsconfigPath }),
+    tsImport(tablesPath, {
+      parentURL: import.meta.url,
+      tsconfig: tsconfigPath,
+    }),
   ).pipe(
     Effect.map((_) => {
       const config = _.config as DatabaseConfig
@@ -282,7 +283,7 @@ const syncPrismaSchema = Effect.fn('prisma.sync-schema')(function* (
     ),
   ).pipe(
     Effect.andThen((content) =>
-      formatSchema({ schemas: [['schema.prisma', content]] }, { insertSpaces: true, tabSize: 2 }),
+      PrismaMigrate.formatSchema({ schemas: [['schema.prisma', content]] }, { insertSpaces: true, tabSize: 2 }),
     ),
     Effect.map((result) => result[0][1]),
     Effect.orDie,
@@ -436,7 +437,9 @@ const dumpD1 = Effect.fn('dump-d1')(function* (
   const { wranglerConfigPath, databaseName, databaseFile } = yield* getWranglerConfig(workspace, {
     database: subcommand.database,
   })
-  const { dbDir } = yield* detectDatabase(workspace, { databaseName: subcommand.database })
+  const { dbDir } = yield* detectDatabase(workspace, {
+    databaseName: subcommand.database,
+  })
   const schemaOutput = path.join(dbDir, 'schema.sql')
 
   const formatSchema = fs.readFileString(schemaOutput).pipe(
@@ -577,13 +580,18 @@ const applyPrismaMigrations = Effect.fn('apply-prisma-migrations')(function* (
   const path = yield* Path.Path
   const fs = yield* FileSystem.FileSystem
   const lockFileContent = yield* fs.readFileString(path.join(dbDir, 'migration_lock.toml'), 'utf8')
-  const schemaContext = yield* Effect.promise(() => loadSchemaContext({ schemaPath: { baseDir: dbDir }, cwd: dbDir }))
+  const schemaContext = yield* Effect.promise(() =>
+    PrismaMigrate.loadSchemaContext({
+      schemaPath: { baseDir: dbDir },
+      cwd: dbDir,
+    }),
+  )
 
   const prismaFilter = { externalEnums: [], externalTables: [] }
 
   yield* Effect.acquireUseRelease(
     Effect.promise(() =>
-      SchemaEngineCLI.setup({
+      PrismaMigrate.SchemaEngineCLI.setup({
         schemaContext,
         baseDir: dbDir,
         datasource: { url: datasource.url },
@@ -760,7 +768,9 @@ export const dump = Effect.fn('db.dump')(function* (
 ) {
   const path = yield* Path.Path
   const fs = yield* FileSystem.FileSystem
-  const { dbDir, config } = yield* detectDatabase(workspace, { databaseName: subcommand.database })
+  const { dbDir, config } = yield* detectDatabase(workspace, {
+    databaseName: subcommand.database,
+  })
 
   if (config.runtime === 'd1') {
     yield* dumpD1(workspace, subcommand)
@@ -830,7 +840,12 @@ export const push = Effect.fn('db.push')(function* (
 
   yield* syncPrismaSchema(workspace, { dbDir }, config, tables)
 
-  const schemaContext = yield* Effect.promise(() => loadSchemaContext({ schemaPath: { baseDir: dbDir }, cwd: dbDir }))
+  const schemaContext = yield* Effect.promise(() =>
+    PrismaMigrate.loadSchemaContext({
+      schemaPath: { baseDir: dbDir },
+      cwd: dbDir,
+    }),
+  )
 
   if (config.runtime === 'd1') {
     const { databaseFile } = yield* getWranglerConfig(workspace, {
@@ -839,10 +854,10 @@ export const push = Effect.fn('db.push')(function* (
 
     yield* resetD1(workspace, { database: subcommand.database })
 
-    const from_: EngineArgs.MigrateDiffTarget = {
+    const from_: PrismaMigrate.EngineArgs.MigrateDiffTarget = {
       tag: 'empty',
     }
-    const to_: EngineArgs.MigrateDiffTarget = {
+    const to_: PrismaMigrate.EngineArgs.MigrateDiffTarget = {
       tag: 'schemaDatamodel',
       files: schemaContext.schemaFiles.map((loadedFile) => {
         return {
@@ -858,7 +873,7 @@ export const push = Effect.fn('db.push')(function* (
       Effect.gen(function* () {
         const captureStdout = new CaptureStdout()
         const migrate = yield* Effect.promise(() =>
-          SchemaEngineCLI.setup({
+          PrismaMigrate.SchemaEngineCLI.setup({
             schemaContext,
             baseDir: dbDir,
             datasource: {
@@ -934,7 +949,7 @@ export const push = Effect.fn('db.push')(function* (
 
     yield* Effect.acquireUseRelease(
       Effect.promise(() =>
-        SchemaEngineCLI.setup({
+        PrismaMigrate.SchemaEngineCLI.setup({
           schemaContext,
           baseDir: dbDir,
           datasource,
@@ -999,9 +1014,16 @@ export const execute = Effect.fn('db.execute')(function* (
 ) {
   const fs = yield* FileSystem.FileSystem
   const path = yield* Path.Path
-  const { config, dbDir } = yield* detectDatabase(workspace, { databaseName: subcommand.database })
+  const { config, dbDir } = yield* detectDatabase(workspace, {
+    databaseName: subcommand.database,
+  })
 
-  const schemaContext = yield* Effect.promise(() => loadSchemaContext({ schemaPath: { baseDir: dbDir }, cwd: dbDir }))
+  const schemaContext = yield* Effect.promise(() =>
+    PrismaMigrate.loadSchemaContext({
+      schemaPath: { baseDir: dbDir },
+      cwd: dbDir,
+    }),
+  )
 
   if (config.runtime === 'd1') {
     const { persistRoot, wranglerConfigPath, databaseName } = yield* getWranglerConfig(workspace, {
@@ -1061,7 +1083,7 @@ export const execute = Effect.fn('db.execute')(function* (
       executeScript = yield* fs.readFileString(inputPath)
     }
 
-    const datasourceType: EngineArgs.DbExecuteDatasourceType = {
+    const datasourceType: PrismaMigrate.EngineArgs.DbExecuteDatasourceType = {
       tag: 'schema',
       files: schemaContext.schemaFiles.map((loadedFile) => {
         return {
@@ -1082,7 +1104,13 @@ export const execute = Effect.fn('db.execute')(function* (
           }
 
     yield* Effect.acquireUseRelease(
-      Effect.promise(() => SchemaEngineCLI.setup({ schemaContext, baseDir: dbDir, datasource })),
+      Effect.promise(() =>
+        PrismaMigrate.SchemaEngineCLI.setup({
+          schemaContext,
+          baseDir: dbDir,
+          datasource,
+        }),
+      ),
       (migrate) =>
         Effect.promise(() =>
           migrate.dbExecute({
@@ -1118,13 +1146,18 @@ export const dev = Effect.fn('db.dev')(function* (
 
   yield* syncPrismaSchema(workspace, { dbDir }, config, tables)
 
-  const schemaContext = yield* Effect.promise(() => loadSchemaContext({ schemaPath: { baseDir: dbDir }, cwd: dbDir }))
+  const schemaContext = yield* Effect.promise(() =>
+    PrismaMigrate.loadSchemaContext({
+      schemaPath: { baseDir: dbDir },
+      cwd: dbDir,
+    }),
+  )
 
   const localDevDb = `file:${path.join(dbDir, devDB)}`
   const localDevShadowDb = `file:${path.join(dbDir, 'shadow.db')}`
 
   // 全新的数据库
-  let from_: EngineArgs.MigrateDiffTarget = {
+  let from_: PrismaMigrate.EngineArgs.MigrateDiffTarget = {
     tag: 'empty',
   }
 
@@ -1159,7 +1192,7 @@ export const dev = Effect.fn('db.dev')(function* (
   }
 
   // 用 schema.prisma 作为目标进行迁移
-  const to_: EngineArgs.MigrateDiffTarget = {
+  const to_: PrismaMigrate.EngineArgs.MigrateDiffTarget = {
     tag: 'schemaDatamodel',
     files: schemaContext.schemaFiles.map((loadedFile) => {
       return {
@@ -1175,7 +1208,7 @@ export const dev = Effect.fn('db.dev')(function* (
     Effect.gen(function* () {
       const captureStdout = new CaptureStdout()
       const migrate = yield* Effect.promise(() =>
-        SchemaEngineCLI.setup({
+        PrismaMigrate.SchemaEngineCLI.setup({
           schemaContext,
           baseDir: dbDir,
           datasource,
@@ -1299,17 +1332,30 @@ export const reset = Effect.fn('db.reset')(function* (
   const migrations = yield* getMigrations(migrationsDir)
 
   if (config.runtime === 'd1') {
-    yield* applyD1Migrations(workspace, { database: subcommand.database, reset: true })
+    yield* applyD1Migrations(workspace, {
+      database: subcommand.database,
+      reset: true,
+    })
   } else if (config.runtime === 'browser') {
     const datasource = {
       url: `file:${path.join(dbDir, devDB)}`,
     }
-    yield* applyPrismaMigrations(workspace, { dbDir, datasource, migrations, reset: true })
+    yield* applyPrismaMigrations(workspace, {
+      dbDir,
+      datasource,
+      migrations,
+      reset: true,
+    })
   } else if (config.runtime === 'server') {
     const datasource = {
       url: config.url,
     }
-    yield* applyPrismaMigrations(workspace, { dbDir, datasource, migrations, reset: true })
+    yield* applyPrismaMigrations(workspace, {
+      dbDir,
+      datasource,
+      migrations,
+      reset: true,
+    })
   }
 
   yield* Effect.logInfo('Reset database done')
@@ -1338,7 +1384,10 @@ export const deploy = Effect.fn('db.deploy')(function* (
   }
 
   if (config.runtime === 'd1') {
-    yield* applyD1Migrations(workspace, { database: subcommand.database, deploy: true })
+    yield* applyD1Migrations(workspace, {
+      database: subcommand.database,
+      deploy: true,
+    })
   } else if (config.runtime === 'browser') {
     yield* Effect.logInfo('Skip browser database deploy')
   } else if (config.runtime === 'server') {

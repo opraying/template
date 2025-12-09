@@ -3,7 +3,7 @@ import { Live } from '@client/native-context'
 import { Boot } from '@xstack/app/components/boot'
 import { NavigationProvider } from '@xstack/router/provider'
 import { Stack } from 'expo-router'
-import { HotUpdater, getUpdateSource } from '@hot-updater/react-native'
+import { HotUpdater } from '@hot-updater/react-native'
 
 export const unstable_settings = {
   anchor: '(tabs)',
@@ -29,7 +29,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   )
 }
 export default HotUpdater.wrap({
-  source: getUpdateSource('https://hot-updater.opraying.workers.dev/api/check-update', {
-    updateStrategy: 'fingerprint',
-  }),
+  baseURL: 'https://hot-updater.opraying.workers.dev/api/check-update',
+  updateStrategy: 'fingerprint',
+  updateMode: 'auto',
 })(RootLayout)

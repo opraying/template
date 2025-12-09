@@ -23,10 +23,11 @@ function projectConfig(dir, options = {}) {
     'local-first/src',
   ].map((item) => join(packagesDir, item))
 
+  const filterList = ['native']
   const projectPkgs = readdirSync(parentDir)
     .filter((item) => {
       const fullPath = join(parentDir, item)
-      return statSync(fullPath).isDirectory()
+      return statSync(fullPath).isDirectory() && !filterList.includes(item)
     })
     .map((item) => join(parentDir, item))
 

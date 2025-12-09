@@ -152,6 +152,13 @@ export const make = Effect.fn('environment.make')(function* ({
   process.env.SANITY_STUDIO_DATASET = allEnv.SANITY_STUDIO_DATASET
   process.env.SANITY_STUDIO_PROJECT_ID = allEnv.SANITY_STUDIO_PROJECT_ID
 
+  // Set all VITE_ prefixed environment variables to process.env
+  Object.entries(allEnv).forEach(([key, value]) => {
+    if (key.startsWith('VITE_')) {
+      process.env[key] = value
+    }
+  })
+
   return {
     env: { ...allEnv, ...envs },
     configProvider: ConfigProvider.fromMap(envMap).pipe(ConfigProvider.orElse(() => ConfigProvider.fromEnv())),
@@ -199,6 +206,13 @@ export const loadEnv = Effect.fn('environment.loadEnv')(function* ({ workspace }
   process.env.SANITY_STUDIO_API_TOKEN = allEnv.SANITY_STUDIO_API_TOKEN
   process.env.SANITY_STUDIO_DATASET = allEnv.SANITY_STUDIO_DATASET
   process.env.SANITY_STUDIO_PROJECT_ID = allEnv.SANITY_STUDIO_PROJECT_ID
+
+  // Set all VITE_ prefixed environment variables to process.env
+  Object.entries(allEnv).forEach(([key, value]) => {
+    if (key.startsWith('VITE_')) {
+      process.env[key] = value
+    }
+  })
 
   return {
     env: allEnv,

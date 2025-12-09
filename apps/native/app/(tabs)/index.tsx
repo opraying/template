@@ -1,13 +1,12 @@
-import { HotUpdater, getUpdateSource, useHotUpdaterStore } from '@hot-updater/react-native'
+import { HotUpdater, useHotUpdaterStore } from '@hot-updater/react-native'
 import { hide } from 'expo-splash-screen'
 import { type ReactNode, useCallback, useEffect, useMemo, useState } from 'react'
 import { Pressable, ScrollView, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
+import type { DimensionValue } from 'react-native'
 
 type CheckForUpdateResult = Awaited<ReturnType<typeof HotUpdater.checkForUpdate>>
 type UpdateInfo = NonNullable<CheckForUpdateResult>
-
-const UPDATE_BASE_URL = 'https://hot-updater.opraying.workers.dev/api/check-update'
 
 export default function HotUpdaterDebugPage() {
   const channel = useMemo(() => HotUpdater.getChannel(), [])
@@ -22,18 +21,16 @@ export default function HotUpdaterDebugPage() {
   const [lastCheckedAt, setLastCheckedAt] = useState<Date | null>(null)
   const [logs, setLogs] = useState<Array<{ id: string; text: string }>>([])
 
-  const updateSource = useMemo(
-    () =>
-      getUpdateSource(UPDATE_BASE_URL, {
-        updateStrategy: 'fingerprint',
-      }),
-    [],
-  )
-
   const appendLog = useCallback((text: string) => {
     const timestamp = new Date().toLocaleTimeString()
     setLogs((current) => {
-      const next = [{ id: `${Date.now()}-${Math.random()}`, text: `[${timestamp}] ${text}` }, ...current]
+      const next = [
+        {
+          id: `${Date.now()}-${Math.random()}`,
+          text: `[${timestamp}] ${text}`,
+        },
+        ...current,
+      ]
       return next.slice(0, 30)
     })
   }, [])
@@ -63,7 +60,7 @@ export default function HotUpdaterDebugPage() {
 
     try {
       const result = await HotUpdater.checkForUpdate({
-        source: updateSource,
+        updateStrategy: 'fingerprint',
       })
       setLastCheckedAt(new Date())
 
@@ -91,7 +88,7 @@ export default function HotUpdaterDebugPage() {
     } finally {
       setIsChecking(false)
     }
-  }, [appendLog, updateSource])
+  }, [appendLog])
 
   const handleApplyWithInfo = useCallback(async () => {
     if (!updateInfo) return
@@ -173,7 +170,10 @@ export default function HotUpdaterDebugPage() {
         <View className="gap-4">
           <StatCard label="Download Progress" value={progressPercent}>
             <View className="mt-3 h-2 w-full rounded-full bg-zinc-800">
-              <View className="h-2 rounded-full bg-emerald-500" style={{ width: progress * 100 + '%' }} />
+              <View
+                className="h-2 rounded-full bg-emerald-500"
+                style={{ width: (progress * 100 + '%') as DimensionValue }}
+              />
             </View>
           </StatCard>
           <StatCard
@@ -283,7 +283,7 @@ type ActionButtonProps = {
 }
 
 function ActionButton({ title, subtitle, onPress, disabled, tone = 'primary', loading }: ActionButtonProps) {
-  const toneClasses: Record<ActionButtonProps['tone'], string> = {
+  const toneClasses: Record<NonNullable<ActionButtonProps['tone']>, string> = {
     primary: 'bg-emerald-600 border-emerald-500',
     secondary: 'bg-indigo-600 border-indigo-500',
     danger: 'bg-rose-600 border-rose-500',

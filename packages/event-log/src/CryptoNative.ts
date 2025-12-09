@@ -141,7 +141,7 @@ export const CryptoLive = Layer.effect(
         const encryptionKey = hmac.digest()
 
         const decipher = QuickCrypto.createDecipheriv('aes-256-gcm', encryptionKey, iv)
-        decipher.setAuthTag(tag) // Set the authentication tag
+        decipher.setAuthTag(Buffer.from(tag)) // Set the authentication tag
 
         const decryptedPart1 = decipher.update(encrypted)
         const decryptedPart2 = decipher.final() // Throws error if tag verification fails

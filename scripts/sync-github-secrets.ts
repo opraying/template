@@ -19,9 +19,9 @@ const SECRETS_FILE = '.env.github'
 
 async function main(): Promise<void> {
   const env = dotenv.config({
-    overload: true,
     quiet: true,
     ignore: ['MISSING_ENV_FILE'],
+    processEnv: {},
   })
   await sodium.ready
 
@@ -135,9 +135,8 @@ function parseRemotePath(pathname: string): RepoCoordinates {
 function loadSecretsFromEnvFile(filePath: string): Record<string, string> {
   const result = dotenv.config({
     path: filePath,
-    processEnv: {},
-    override: true,
     quiet: true,
+    processEnv: {},
   })
 
   if (result.error) {

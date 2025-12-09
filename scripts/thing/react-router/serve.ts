@@ -284,7 +284,10 @@ export const start = Effect.fn('react-router.serve-start')(function* (subcommand
    */
   const { contextBuilder } = yield* Effect.promise(
     () =>
-      tsImport(contextFilePath, { parentURL: import.meta.url, tsconfig: tsconfigPath }) as Promise<{
+      tsImport(contextFilePath, {
+        parentURL: import.meta.url,
+        tsconfig: tsconfigPath,
+      }) as Promise<{
         contextBuilder: ReturnType<make>
       }>,
   ).pipe(Effect.tap(Effect.logInfo('Import Context Builder')), Effect.tapErrorCause(Effect.logError), Effect.orDie)
@@ -301,6 +304,7 @@ export const start = Effect.fn('react-router.serve-start')(function* (subcommand
         const server = createServer({
           configFile: `${workspace.projectPath}/vite.config.ts`,
           appType: 'custom',
+          env: {},
           server: {
             allowedHosts: true,
             middlewareMode: true,

@@ -73,13 +73,6 @@ function workerChunkPlugin() {
 }
 
 export async function reactRouter(projectPath: string, options?: ViteConfig) {
-  if (!process.env.VITE_RUNN) {
-    process.env.VITE_RUNN = '0'
-  }
-  let runnerCount = parseInt(process.env.VITE_RUNN, 10)
-  runnerCount++
-  process.env.VITE_RUNN = runnerCount.toString()
-  const isChildCompiler = runnerCount > 1
   const isProduction = process.env.NODE_ENV === 'production'
   const isDev = process.env.NODE_ENV === 'development'
   const isAnalyze = process.env.ANALYZE === 'true'
@@ -279,6 +272,7 @@ export async function reactRouter(projectPath: string, options?: ViteConfig) {
     root: projectPath,
     cacheDir: join(workspaceRoot, `node_modules/.vite/${projectLocation}`),
     envPrefix: ['VITE_'],
+    envDir: false,
     logLevel: 'warn',
     server: {
       cors: false,

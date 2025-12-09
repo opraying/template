@@ -501,14 +501,18 @@ async function withCommitWorkspace<T>(workspaceRoot: string, commit: string, tas
   let worktreeAdded = false
 
   try {
-    git(['worktree', 'add', '--detach', tempRoot, commit], { cwd: workspaceRoot })
+    git(['worktree', 'add', '--detach', tempRoot, commit], {
+      cwd: workspaceRoot,
+    })
     worktreeAdded = true
     linkSharedResources(workspaceRoot, tempRoot)
     return await task(tempRoot)
   } finally {
     if (worktreeAdded) {
       try {
-        git(['worktree', 'remove', '--force', tempRoot], { cwd: workspaceRoot })
+        git(['worktree', 'remove', '--force', tempRoot], {
+          cwd: workspaceRoot,
+        })
       } catch (error) {
         console.warn(
           `[fingerprint] Failed to remove worktree: ${error instanceof Error ? error.message : String(error)}`,

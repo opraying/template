@@ -3,7 +3,7 @@ import * as Database from '@xstack/db'
 import * as Schema from 'effect/Schema'
 import * as Prisma from '../src/prisma'
 
-const g = (tables: Prisma.Tables) => Prisma.generate({ provider: 'sqlite', url: 'file:./dev.dv' }, tables)
+const g = (tables: Prisma.Tables) => Prisma.generate({ provider: 'sqlite' }, tables)
 
 describe('Prisma schema generate', () => {
   it.skip('should generate prisma schema', () => {
@@ -36,7 +36,10 @@ describe('Prisma schema generate', () => {
           Schema.propertySignature,
           Schema.withConstructorDefault(() => 'active' as const),
         ),
-        settings: Schema.Record({ key: Schema.String, value: Schema.Unknown }).pipe(
+        settings: Schema.Record({
+          key: Schema.String,
+          value: Schema.Unknown,
+        }).pipe(
           Database.ColumnConfig({
             description: 'Organization configuration settings',
           }),
@@ -110,7 +113,10 @@ describe('Prisma schema generate', () => {
             description: "Reference to user's organization",
           }),
         ),
-        metadata: Schema.Record({ key: Schema.String, value: Schema.Unknown }).pipe(
+        metadata: Schema.Record({
+          key: Schema.String,
+          value: Schema.Unknown,
+        }).pipe(
           Database.ColumnConfig({
             description: 'Additional user metadata',
           }),
@@ -390,7 +396,10 @@ describe('Prisma schema generate', () => {
             description: 'Reference to owning organization',
           }),
         ),
-        metadata: Schema.Record({ key: Schema.String, value: Schema.Unknown }).pipe(
+        metadata: Schema.Record({
+          key: Schema.String,
+          value: Schema.Unknown,
+        }).pipe(
           Database.ColumnConfig({
             description: 'Additional product metadata',
           }),

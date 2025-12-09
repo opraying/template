@@ -43,7 +43,7 @@ overrides:
   clsx: 2.1.1
   cookie: 1.1.1
   deep-equal: npm:@nolyfill/deep-equal@^1
-  effect: 3.19.9
+  effect: 3.19.10
   es-iterator-helpers: npm:@nolyfill/es-iterator-helpers@^1
   es-set-tostringtag: npm:@nolyfill/es-set-tostringtag@^1
   esbuild: 0.27.1

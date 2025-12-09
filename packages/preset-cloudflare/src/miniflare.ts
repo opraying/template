@@ -611,7 +611,9 @@ const make = (
 
                     const workflowBinding = bindings[binding] as Workflow | undefined
                     if (!workflowBinding) {
-                      return Response.json({ error: `Binding ${binding} not found` })
+                      return Response.json({
+                        error: `Binding ${binding} not found`,
+                      })
                     }
 
                     try {
@@ -646,7 +648,9 @@ const make = (
                       })
                     }
 
-                    return Response.json({ error: `Unknown method: ${method}` })
+                    return Response.json({
+                      error: `Unknown method: ${method}`,
+                    })
                   }
 
                   if (url.pathname === '/instance') {
@@ -655,12 +659,16 @@ const make = (
 
                     const workflowBinding = bindings[binding] as Workflow | undefined
                     if (!workflowBinding) {
-                      return Response.json({ error: `Binding ${binding} not found` })
+                      return Response.json({
+                        error: `Binding ${binding} not found`,
+                      })
                     }
 
                     const instance = await workflowBinding.get(instanceId)
                     if (!instance) {
-                      return Response.json({ error: `Instance ${instanceId} not found` })
+                      return Response.json({
+                        error: `Instance ${instanceId} not found`,
+                      })
                     }
 
                     let result
@@ -704,7 +712,9 @@ const make = (
                         }
                         break
                       default:
-                        return Response.json({ error: `Unknown instance method: ${method}` })
+                        return Response.json({
+                          error: `Unknown instance method: ${method}`,
+                        })
                     }
 
                     return Response.json(result ?? {})

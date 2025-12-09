@@ -93,7 +93,10 @@ export const parseConfig = Effect.fn('wrangler.parse-config')(function* (
         Effect.fnUntraced(function* (acc, configPath) {
           if (Option.isSome(acc)) return acc
 
-          const result: Option.Option<{ config: Unstable_Config; path: string }> = yield* pipe(
+          const result: Option.Option<{
+            config: Unstable_Config
+            path: string
+          }> = yield* pipe(
             Effect.try(() => unstable_readConfig({ config: configPath, env, remote: false }, { hideWarnings: false })),
             Effect.tapErrorCause(Effect.logError),
             Effect.map((config) => Option.some({ config, path: configPath })),

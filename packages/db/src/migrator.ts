@@ -193,7 +193,11 @@ const make = Effect.gen(function* () {
       `.withoutTransform
     }
 
-    const latestMigration = sql<{ name: string; created_at: string; finished_at: string }>`
+    const latestMigration = sql<{
+      name: string
+      created_at: string
+      finished_at: string
+    }>`
         SELECT * FROM ${sql(migrationsTable)} ORDER BY created_at DESC LIMIT 1
       `.withoutTransform.pipe(
       Effect.map((_) =>

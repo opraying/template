@@ -42,7 +42,10 @@
       "autoUseWorkspaceTsdk": true,
       "settings": {
         "typescript": {
-          "tsserver": { "maxTsServerMemory": 8092, "enableRegionDiagnostics": true },
+          "tsserver": {
+            "maxTsServerMemory": 8092,
+            "enableRegionDiagnostics": true
+          },
           "workspaceSymbols": { "scope": "currentProject" },
           "preferGoToSourceDefinition": true,
           "preferences": {
@@ -85,7 +88,6 @@
     // Environment and config files
     ".direnv",
     ".envrc",
-    ".env",
     "**/.env",
     "**/.env.*",
     ".node-version",
@@ -105,6 +107,7 @@
     "*turbo.json",
     "*.turbo",
     ".expo",
+    ".hot-updater",
     ".venv",
     "**/node_modules",
     "**/pnpm-lock.yaml",
@@ -126,10 +129,9 @@
     "**/*.tsbuildinfo",
 
     // Configuration files
-    ".prettierignore",
-    ".prettierrc",
     "cspell.json",
     "**/.oxlintrc.json",
+    "**/.oxfmtrc.json",
     "flake.*",
     "lefthook.yml",
     "nx.json",
